@@ -1,5 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client'; //
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import ReactDOM from 'react-dom/client';
 import { 
   Plus, LayoutGrid, Home, Calendar as CalendarIcon, 
   Settings as SettingsIcon, Bell, ChevronRight, ChevronLeft,
@@ -803,10 +804,7 @@ const App: React.FC = () => {
             {isSyncing ? <RefreshCw className="w-[17px] h-[17px] text-indigo-500 animate-spin" strokeWidth={1.5} /> : (isGoogleLoggedIn ? <Cloud className="w-[17px] h-[17px] text-emerald-500" strokeWidth={1.5} /> : <CloudOff className="w-[17px] h-[17px] text-slate-300" strokeWidth={1.5} />)}
             {state.isPro && <Star className="w-[17px] h-[17px] text-amber-400 fill-amber-400 animate-pulse" strokeWidth={1.5} />}
           </div>
-          <button 
-            onClick={(e) => { e.stopPropagation(); setIsModalOpenExpense(true); }} 
-            className={`w-[42.1px] h-[42.1px] ${state.theme === 'dark' ? 'bg-slate-700/80' : 'bg-slate-100/80'} rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-all relative border-[0.5px] ${state.isPro ? 'border-blue-600' : (state.theme === 'dark' ? 'border-white' : 'border-[#6b6d8a]')}`}
-          >
+          <button onClick={(e) => { e.stopPropagation(); setIsModalOpenExpense(true); }} className={`w-[42.1px] h-[42.1px] ${state.theme === 'dark' ? 'bg-slate-700/80' : 'bg-slate-100/80'} rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-all relative`}>
             <Wallet className={`w-[23.1px] h-[23.1px] ${state.isPro ? 'text-blue-600' : (state.theme === 'dark' ? 'text-white' : 'text-[#6b6d8a]')}`} strokeWidth={1.5} />
           </button>
         </div>
@@ -1353,7 +1351,7 @@ const App: React.FC = () => {
           <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl`}>
             <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><Zap className="w-8 h-8" /></div>
             <h3 className="text-sm font-black mb-10 uppercase tracking-tighter leading-relaxed">{state.language === 'es' ? '¿ACTIVAR MODO DIRECTO PARA AÑADIR RECORDATORIOS RÁPIDAMENTE?' : 'ENABLE DIRECT MODE TO ADD REMINDERS QUICKLY?'}</h3>
-            <div className="grid grid-cols-2 gap-4"><button onClick={() => setIsDirectModeConfirmOpen(false)} className="py-5 rounded-[1.8rem] bg-slate-100 dark:bg-slate-700 font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white shadow-sm">{t.no}</button><button onClick={() => { setState(p => ({...p, isPro: true})); setIsDirectAddMode(true); setIsDirectModeConfirmOpen(false); }} className="py-5 rounded-[1.8rem] bg-emerald-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl">{t.yes}</button></div>
+            <div className="grid grid-cols-2 gap-4"><button onClick={() => setIsDirectModeConfirmOpen(false)} className="py-5 rounded-[1.8rem] bg-slate-100 dark:bg-slate-700 font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white shadow-sm">{t.no}</button><button onClick={() => { setIsDirectAddMode(true); setIsDirectModeConfirmOpen(false); }} className="py-5 rounded-[1.8rem] bg-emerald-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl">{t.yes}</button></div>
           </div>
         </div>
       )}
@@ -1544,7 +1542,6 @@ const App: React.FC = () => {
 };
 
 export default App;
-
 const rootElement = document.getElementById('root');
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
