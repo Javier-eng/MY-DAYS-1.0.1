@@ -1397,31 +1397,33 @@ const App: React.FC = () => {
                    <input type="date" value={state.user.dateOfBirth} onChange={(e) => setState(p => ({...p, user: {...p.user, dateOfBirth: e.target.value}}))} className={`flex-1 p-4 rounded-2xl font-bold bg-white dark:bg-slate-800 border dark:border-slate-700 outline-none focus:border-violet-400 text-black`} />
                    <div className="p-4 rounded-2xl bg-violet-600 text-white shadow-md"><CheckCircle2 className="w-5 h-5" /></div>
                  </div>
-              </div>
-              <div className={`p-6 rounded-[2rem] border transition-all ${state.theme === 'dark' ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50 border-indigo-100'}`}>
-                <p className={`text-[16.8px] font-medium leading-relaxed mb-4 italic whitespace-pre-line break-words ${state.theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>"{SHARE_MESSAGE_CUMPLEAÑOS(state.language, state.user.dateOfBirth || '')); alert(t.copiedToClipboard); }} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"><Copy className="w-4 h-4" strokeWidth={1.5} /> {t.copyText}</button>
-                
-                <div className="grid grid-cols-1 gap-4 mt-6">
-                  <button onClick={() => { setBirthDay('01'); setBirthMonth('01'); setIsManualAddModalOpen(true); }} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
-                    <Plus className="w-4 h-4" strokeWidth={2.5} /> {t.addManually}
-                  </button>
-                  <button onClick={handleImportGoogleCalendar} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
-                    <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" /> {t.importGoogleCalendar}
-                  </button>
-                </div>
-              </div>
+                <div className={`p-6 rounded-[2rem] border transition-all ${state.theme === 'dark' ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50 border-indigo-100'}`}>
+            {/* Mensaje de Cumpleaños */}
+            <p className={`text-[16.8px] font-medium leading-relaxed mb-4 italic whitespace-pre-line break-words ${state.theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              "{SHARE_MESSAGE_CUMPLEAÑOS(state.language, state.user.dateOfBirth || '')}"
+            </p>
+            
+            {/* Botón de Copiar corregido */}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(SHARE_MESSAGE_CUMPLEAÑOS(state.language, state.user.dateOfBirth || ''));
+                alert(t.copiedToClipboard);
+              }}
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
+            >
+              <Copy className="w-4 h-4" strokeWidth={1.5} /> {t.copyText}
+            </button>
+            
+            {/* Botones de acción manual y Google */}
+            <div className="grid grid-cols-1 gap-4 mt-6">
+              <button onClick={() => { setBirthDay('01'); setBirthMonth('01'); setIsManualAddModalOpen(true); }} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
+                <Plus className="w-4 h-4" strokeWidth={2.5} /> {t.addManually}
+              </button>
+              <button onClick={handleImportGoogleCalendar} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
+                <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" /> {t.importGoogleCalendar}
+              </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {isManualAddModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[800] flex items-end justify-center">
-          <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[92vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
-            <div className="flex justify-between items-start mb-6">
-              <div><h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{t.manualAddTitle}</h2><p className="text-[11px] font-bold uppercase tracking-tight mt-2 text-slate-400">{t.manualAddSub}</p></div>
-              <button onClick={() => setIsManualAddModalOpen(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button>
-            </div>
             <form onSubmit={(e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
