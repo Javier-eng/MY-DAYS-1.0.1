@@ -190,7 +190,9 @@ const App: React.FC = () => {
         currency: '$', 
         showProfileImage: true, 
         wallpaperOpacity: 0.5,
-        wallpaper: cachedWallpaper || undefined
+        wallpaper: cachedWallpaper || undefined,
+        titleColor: undefined,
+        titleCase: 'uppercase'
       },
       globalSettings: {
         categoryConfigs: {
@@ -258,6 +260,7 @@ const App: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<CategoryType | null>(null);
   const [activeSubCategory, setActiveSubCategory] = useState<SubCategoryType | null>(null);
   const [dashboardFilter, setDashboardFilter] = useState<CategoryType | null>(null);
+  const [notesFilter, setNotesFilter] = useState<CategoryType | null>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsModalOpenExpense] = useState(false);
@@ -664,7 +667,7 @@ const App: React.FC = () => {
                 <span className="text-[14px] font-black">{d.day}</span>
                 <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {categories.has(CategoryType.SUBSCRIPTIONS) && <div className={`w-2 h-2 rounded-full border border-white/30 ${isSelected ? 'bg-white' : 'bg-amber-500'}`}></div>}
-                  {categories.has(CategoryType.APPOINTMENTS) && <div className={`w-2 h-2 rounded-full border border-white/30 ${isSelected ? 'bg-white' : 'bg-emerald-50'}`}></div>}
+                  {categories.has(CategoryType.APPOINTMENTS) && <div className={`w-2 h-2 rounded-full border border-white/30 ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}></div>}
                   {categories.has(CategoryType.NOTES) && <div className={`w-2 h-2 rounded-none border border-white/30 ${isSelected ? 'bg-white' : 'bg-slate-400'}`}></div>}
                 </div>
               </button>
@@ -791,7 +794,19 @@ const App: React.FC = () => {
             </div>
           )}
           <div className="flex flex-col">
-            <div className="flex items-baseline"><h1 className="text-[29.25px] font-black uppercase tracking-[0.05em] leading-none text-slate-700 dark:text-slate-300">{t.appName}</h1></div>
+            <div className="flex items-baseline">
+              <h1 
+                className="text-[29.25px] font-black tracking-[0.05em] leading-none"
+                style={{
+                  color: state.user.titleColor || (state.theme === 'dark' ? '#cbd5e1' : '#334155'),
+                  textTransform: state.user.titleCase === 'capitalize' ? 'capitalize' : 'uppercase',
+                  WebkitTextStroke: '1px white',
+                  paintOrder: 'stroke fill'
+                }}
+              >
+                {t.appName}
+              </h1>
+            </div>
             <div className="flex items-center gap-2 mt-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-sm shadow-sm shadow-emerald-500/50"></div>
               <p className="text-[10.5px] font-black text-slate-400 uppercase tracking-[0.4em]">{t.allImportant}</p>
@@ -888,7 +903,7 @@ const App: React.FC = () => {
           <div className="flex-1 flex flex-col overflow-hidden">
             <div style={state.user.wallpaper ? {backgroundColor: state.theme === 'dark' ? `rgba(15, 23, 42, ${uiBaseOpacity})` : `rgba(255, 255, 255, ${uiBaseOpacity})`} : {}} className="px-[30.36px] pt-4 pb-6 shrink-0 z-10 border-b border-black/5 dark:border-white/5 relative">
               <div className="flex items-center gap-3 overflow-hidden mb-6">
-                <button onClick={() => { if(activeCategory === CategoryType.BIRTHDAYS || activeCategory === CategoryType.NOTES) setCurrentView('categories'); else setCurrentView('sub-categories'); }} className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-all ${state.user.wallpaper ? 'bg-slate-100/60 backdrop-blur-sm' : 'bg-slate-100 dark:bg-slate-800'}`}><ChevronLeft className="text-slate-600" strokeWidth={1.5} /></button>
+                <button onClick={() => { setNotesFilter(null); if(activeCategory === CategoryType.BIRTHDAYS || activeCategory === CategoryType.NOTES) setCurrentView('categories'); else setCurrentView('sub-categories'); }} className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-all ${state.user.wallpaper ? 'bg-slate-100/60 backdrop-blur-sm' : 'bg-slate-100 dark:bg-slate-800'}`}><ChevronLeft className="text-slate-600" strokeWidth={1.5} /></button>
                 <div className="flex items-center gap-4 truncate">
                   <div className={activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-600' : (activeCategory === CategoryType.NOTES ? 'text-slate-500' : CATEGORY_DETAILS[activeCategory].textColor)}>
                     {activeSubCategory && SUB_CATEGORY_DETAILS[activeSubCategory] ? React.cloneElement(SUB_CATEGORY_DETAILS[activeSubCategory].icon as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 }) : (activeCategory === CategoryType.NOTES ? <StickyNote className="w-12 h-12" strokeWidth={1.5} /> : React.cloneElement(CATEGORY_DETAILS[activeCategory].icon as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 }))}
@@ -901,6 +916,25 @@ const App: React.FC = () => {
               <button onClick={() => { if (activeCategory === CategoryType.BIRTHDAYS) setRepeatYearly(true); else if (activeCategory === CategoryType.NOTES) { setNoteIconColor(CategoryType.NOTES); setRepeatYearly(false); } else setRepeatYearly(false); setModalNotifyValue(activeCategory === CategoryType.DOCUMENTS ? 30 : (activeCategory === CategoryType.APPOINTMENTS ? 2 : 7)); setIsModalOpen(true); }} className={`w-full py-[18px] rounded-3xl font-black text-[13.5px] uppercase tracking-[0.1em] shadow-xl flex items-center justify-center gap-3 active:scale-[0.98] transition-all text-white ${activeCategory === CategoryType.BIRTHDAYS ? 'bg-indigo-600' : `bg-gradient-to-br ${CATEGORY_DETAILS[activeCategory].color}`}`}>
                 <Plus className="w-5 h-5" strokeWidth={2.5} /> {activeCategory === CategoryType.NOTES ? t.addNote : t.addDate}
               </button>
+              
+              {activeCategory === CategoryType.NOTES && (
+                <div className="mt-6 grid grid-cols-6 gap-3 animate-in fade-in duration-500">
+                  {[
+                    { type: CategoryType.BIRTHDAYS, color: 'from-rose-400 to-rose-600' },
+                    { type: CategoryType.DOCUMENTS, color: 'from-blue-400 to-blue-600' },
+                    { type: CategoryType.SUBSCRIPTIONS, color: 'from-amber-400 to-amber-500' },
+                    { type: CategoryType.APPOINTMENTS, color: 'from-emerald-400 to-emerald-600' },
+                    { type: CategoryType.VIOLET, color: 'from-violet-400 to-violet-600' },
+                    { type: CategoryType.NOTES, color: 'from-slate-400 to-slate-600' }
+                  ].map(btn => (
+                    <button 
+                      key={btn.type}
+                      onClick={() => setNotesFilter(notesFilter === btn.type ? null : btn.type)}
+                      className={`aspect-square rounded-2xl transition-all active:scale-95 shadow-sm ${notesFilter === btn.type ? `bg-gradient-to-br ${btn.color} scale-110 shadow-lg ring-2 ring-white/30` : `bg-gradient-to-br ${btn.color} opacity-25 grayscale-[0.2]`}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto px-[30.36px] pt-6 pb-28 animate-in slide-in-from-right duration-500 relative z-10">
               {activeCategory === CategoryType.BIRTHDAYS && (
@@ -920,7 +954,12 @@ const App: React.FC = () => {
                   ))}
                 </p>
               </div>
-              <div className="space-y-1 relative z-10">{state.dates.filter(d => d.category === activeCategory && (!activeSubCategory || d.subCategory === activeSubCategory)).map(item => <DateCard key={item.id} item={item} language={state.language} theme={state.theme} wallpaper={state.user.wallpaper} onCardClick={openEventDetails} onDeleteClick={(id) => setIsDeleteConfirmOpen(id)} />)}</div>
+              <div className="space-y-1 relative z-10">
+                {state.dates
+                  .filter(d => d.category === activeCategory && (!activeSubCategory || d.subCategory === activeSubCategory) && (!notesFilter || d.noteColor === notesFilter))
+                  .map(item => <DateCard key={item.id} item={item} language={state.language} theme={state.theme} wallpaper={state.user.wallpaper} onCardClick={openEventDetails} onDeleteClick={(id) => setIsDeleteConfirmOpen(id)} />)
+                }
+              </div>
             </div>
           </div>
         )}
@@ -947,6 +986,42 @@ const App: React.FC = () => {
                    setNotifAmPm(ampm);
                    setIsNotifTimeModalOpen(true);
                }}><div className="flex items-center gap-3"><Clock className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{t.generalNotifTime}</span></div><span className="text-[11px] font-black text-indigo-600 dark:text-white uppercase">{formatTimeTo12h(state.globalSettings.defaultNotificationTime)}</span></div><div className="flex items-center justify-between cursor-pointer" onClick={() => setIsInfoModalOpen(true)}><div className="flex items-center gap-3"><Info className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{t.info}</span></div><ChevronRight className="w-4 h-4 text-slate-300" strokeWidth={1.5} /></div></div><div className={`rounded-[2.5rem] p-6 border ${state.theme === 'dark' ? (state.user.wallpaper ? 'bg-slate-800/70 backdrop-blur-md border-slate-700' : 'bg-slate-800 border-slate-700') : (state.user.wallpaper ? 'bg-white/70 border-slate-100 backdrop-blur-md' : 'bg-white border-slate-100 shadow-sm')} space-y-6 shadow-sm`}><div className="flex items-center justify-between"><div className="flex items-center gap-3"><ImageIcon className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{state.language === 'es' ? 'FONDO DE PANTALLA' : 'WALLPAPER'}</span>{!state.isPro && <Crown className="w-3.5 h-3.5 text-amber-500" strokeWidth={1.5} />}</div><div className="flex items-center gap-2">{state.user.wallpaper && <button onClick={() => setIsWallpaperDeleteConfirmOpen(true)} className="p-2 text-rose-500 rounded-full active:scale-90 transition-all"><Trash2 className="w-4 h-4" strokeWidth={1.5} /></button>}<button onClick={() => { if (!state.isPro) setIsPaywallOpen(true); else wallpaperInputRef.current?.click(); }} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-md">{state.user.wallpaper ? (state.language === 'es' ? 'CAMBIAR' : 'CHANGE') : (state.language === 'es' ? 'SUBIR FOTO' : 'UPLOAD')}</button><input type="file" ref={wallpaperInputRef} onChange={handleWallpaperUpload} accept="image/*" className="hidden" /></div></div>{state.user.wallpaper && (<div className="space-y-2 animate-in slide-in-from-top duration-300"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{state.language === 'es' ? 'OPACIDAD DEL FONDO' : 'WALLPAPER OPACITY'}</label><input type="range" min="0" max="1" step="0.01" value={state.user.wallpaperOpacity} onChange={(e) => { if (!state.isPro) setIsPaywallOpen(true); else setState(p => ({...p, user: {...p.user, wallpaperOpacity: parseFloat(e.target.value)}})); }} className="w-full h-1.5 bg-indigo-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" /></div>)}</div>
+
+                 {/* New Title Customization Section */}
+                 <div className={`rounded-[2.5rem] p-6 border ${state.theme === 'dark' ? (state.user.wallpaper ? 'bg-slate-800/70 backdrop-blur-md border-slate-700' : 'bg-slate-800 border-slate-700') : (state.user.wallpaper ? 'bg-white/70 border-slate-100 backdrop-blur-md' : 'bg-white border-slate-100 shadow-sm')} space-y-6 shadow-sm`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Palette className="text-indigo-600 w-5 h-5" strokeWidth={1.5} />
+                            <span className="text-[11px] font-black uppercase">{state.language === 'es' ? 'COLOR DEL TÍTULO' : 'TITLE COLOR'}</span>
+                        </div>
+                        <input 
+                            type="color" 
+                            value={state.user.titleColor || (state.theme === 'dark' ? '#cbd5e1' : '#334155')}
+                            onChange={(e) => setState(p => ({...p, user: {...p.user, titleColor: e.target.value}}))}
+                            className="w-10 h-10 rounded-lg border-none bg-transparent cursor-pointer"
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Languages className="text-indigo-600 w-5 h-5" strokeWidth={1.5} />
+                            <span className="text-[11px] font-black uppercase">{state.language === 'es' ? 'FORMATO DEL TÍTULO' : 'TITLE FORMAT'}</span>
+                        </div>
+                        <div className="flex bg-slate-100 dark:bg-slate-700 rounded-xl p-1">
+                            <button 
+                                onClick={() => setState(p => ({...p, user: {...p.user, titleCase: 'uppercase'}}))}
+                                className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${state.user.titleCase !== 'capitalize' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400'}`}
+                            >
+                                AA
+                            </button>
+                            <button 
+                                onClick={() => setState(p => ({...p, user: {...p.user, titleCase: 'capitalize'}}))}
+                                className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${state.user.titleCase === 'capitalize' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400'}`}
+                            >
+                                Aa
+                            </button>
+                        </div>
+                    </div>
+                 </div>
                
                  {!state.isPro && (
                    <div onClick={() => setIsPaywallOpen(true)} className="rounded-[2.5rem] p-8 bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 text-white relative overflow-hidden shadow-xl active:scale-[0.98] transition-all cursor-pointer group animate-in zoom-in duration-500">
@@ -968,7 +1043,7 @@ const App: React.FC = () => {
       <nav style={section1BgStyle} className={`fixed bottom-0 left-0 right-0 border-t backdrop-blur-xl flex justify-around items-center py-6 z-50 px-[30.36px] mx-auto w-full max-w-xl border-white/10`}>
         {[ { icon: <Home />, view: 'dashboard' as View }, { icon: <LayoutGrid />, view: 'categories' as View }, { icon: <CalendarIcon />, view: 'calendar' as View }, { icon: <SettingsIcon />, view: 'settings' as View } ].map(item => {
           const isActive = currentView === item.view;
-          return ( <button key={item.view} onClick={() => { setCurrentView(item.view); setActiveCategory(null); setActiveSubCategory(null); setDashboardFilter(null); setSelectedCalendarDay(new Date()); setIsDirectOnce(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${isActive ? 'text-indigo-600 scale-110' : 'text-slate-400 hover:text-slate-500'}`}>{React.cloneElement(item.icon as React.ReactElement<any>, { className: "w-8 h-8", strokeWidth: 1.5 })}</button> );
+          return ( <button key={item.view} onClick={() => { setCurrentView(item.view); setActiveCategory(null); setActiveSubCategory(null); setDashboardFilter(null); setNotesFilter(null); setSelectedCalendarDay(new Date()); setIsDirectOnce(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${isActive ? 'text-indigo-600 scale-110' : 'text-slate-400 hover:text-slate-500'}`}>{React.cloneElement(item.icon as React.ReactElement<any>, { className: "w-8 h-8", strokeWidth: 1.5 })}</button> );
         })}
       </nav>
 
