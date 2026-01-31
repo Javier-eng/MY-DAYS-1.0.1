@@ -1,99 +1,100 @@
+import { GoogleGenAI, Type } from "@google/genai";
 
-import { GoogleGenAI, Type, Modality } from "@google/genai";
-
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
-
-// Helper to decode base64
-function decode(base64: string) {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
-
-// Helper to decode PCM to AudioBuffer
-async function decodeAudioData(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
-): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-    }
-  }
-  return buffer;
-}
-
-export const GeminiService = {
-  async generateText(prompt: string, systemInstruction: string = "You are a professional creative writer.") {
-    const ai = getAI();
+/**
+ * Gets AI-suggested reminder offsets in days.
+ */
+export const getSmartReminderSuggestions = async (title: string, category: string, language: 'en' | 'es') => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
+      model: "gemini-3-flash-preview",
+      contents: `Suggest the most useful reminder days before (as numbers) for this task: "${title}" in category "${category}". Language: ${language}. Context: Typical renewal periods for documents or birthday planning.`,
       config: {
-        systemInstruction,
-        temperature: 0.7,
-      },
+        maxOutputTokens: 100,
+        thinkingConfig: { thinkingBudget: 50 },
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.INTEGER },
+          description: "List of days before the event to trigger reminders."
+        }
+      }
     });
-    return response.text || '';
-  },
+    const text = response.text || "[]";
+    const result = JSON.parse(text);
+    return Array.isArray(result) ? result : [1, 7, 30];
+  } catch (error) {
+    console.error("AI Error:", error);
+    return [1, 7, 30];
+  }
+};
 
-  async generateImage(prompt: string, aspectRatio: "1:1" | "16:9" | "9:16" = "1:1") {
-    const ai = getAI();
+/**
+ * Generates AI schedule summary for the user.
+ */
+export const getAIScheduleSummary = async (events: any[], language: 'en' | 'es') => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const eventsStr = JSON.stringify(events.slice(0, 5));
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Based on these upcoming events: ${eventsStr}, write a very short, friendly 1-sentence summary or tip. Language: ${language}. Be encouraging and concise.`,
+    });
+    return response.text;
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
+ * Generates Gift Ideas based on a birthday event.
+ */
+export const getGiftIdeas = async (name: string, notes: string, language: 'en' | 'es') => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Provide 3 creative and varied gift ideas for ${name}. Context/Notes: ${notes}. Language: ${language}. Keep it brief.`,
+    });
+    return response.text;
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
+ * Generates a high-quality Marketing Asset using a custom prompt.
+ */
+export const generateMarketingAsset = async (
+  prompt: string, 
+  aspectRatio: "1:1" | "16:9" | "9:16", 
+  base64Image?: string
+) => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const parts: any[] = [];
+    if (base64Image) {
+      const cleanBase64 = base64Image.split(',')[1] || base64Image;
+      parts.push({ inlineData: { data: cleanBase64, mimeType: "image/png" } });
+      parts.push({ text: `Based on the provided image, generate an alternative version following this description: ${prompt}` });
+    } else {
+      parts.push({ text: prompt });
+    }
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [{ text: prompt }],
-      },
-      config: {
-        imageConfig: { aspectRatio },
-      },
+      contents: { parts },
+      config: { imageConfig: { aspectRatio: aspectRatio } }
     });
-
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
+    if (response.candidates && response.candidates[0].content.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          return `data:image/png;base64,${part.inlineData.data}`;
+        }
       }
     }
-    throw new Error("No image data returned from API");
-  },
-
-  async textToSpeech(text: string, voiceName: string = 'Kore') {
-    const ai = getAI();
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName },
-          },
-        },
-      },
-    });
-
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) throw new Error("No audio data returned");
-
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-    const audioBuffer = await decodeAudioData(
-      decode(base64Audio),
-      audioCtx,
-      24000,
-      1
-    );
-    
-    return { audioBuffer, audioCtx };
+    return null;
+  } catch (error) {
+    console.error("Image Generation Error:", error);
+    return null;
   }
 };

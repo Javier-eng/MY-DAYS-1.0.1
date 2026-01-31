@@ -1,6 +1,7 @@
 {
-  "name": "Lumina Creative Studio",
-  "description": "An all-in-one AI-powered creative workspace for generating text, high-quality images, and lifelike speech using the Gemini API.",
+  "name": "MY DAYS -V1.0.0",
+  "description": "Professional anniversary and document reminder app. Lifetime Gold system and multi-language support (EN/ES).",
+  "version": "1.0.0",
   "requestFramePermissions": [
     "camera",
     "microphone"
