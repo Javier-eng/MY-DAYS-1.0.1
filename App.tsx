@@ -258,7 +258,6 @@ const App: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<CategoryType | null>(null);
   const [activeSubCategory, setActiveSubCategory] = useState<SubCategoryType | null>(null);
   const [dashboardFilter, setDashboardFilter] = useState<CategoryType | null>(null);
-  const [notesFilter, setNotesFilter] = useState<CategoryType | null>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsModalOpenExpense] = useState(false);
@@ -665,7 +664,7 @@ const App: React.FC = () => {
                 <span className="text-[14px] font-black">{d.day}</span>
                 <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {categories.has(CategoryType.SUBSCRIPTIONS) && <div className={`w-2 h-2 rounded-full border border-white/30 ${isSelected ? 'bg-white' : 'bg-amber-500'}`}></div>}
-                  {categories.has(CategoryType.APPOINTMENTS) && <div className={`w-2 h-2 rounded-full border border-white/30 ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}></div>}
+                  {categories.has(CategoryType.APPOINTMENTS) && <div className={`w-2 h-2 rounded-full border border-white/30 ${isSelected ? 'bg-white' : 'bg-emerald-50'}`}></div>}
                   {categories.has(CategoryType.NOTES) && <div className={`w-2 h-2 rounded-none border border-white/30 ${isSelected ? 'bg-white' : 'bg-slate-400'}`}></div>}
                 </div>
               </button>
@@ -889,7 +888,7 @@ const App: React.FC = () => {
           <div className="flex-1 flex flex-col overflow-hidden">
             <div style={state.user.wallpaper ? {backgroundColor: state.theme === 'dark' ? `rgba(15, 23, 42, ${uiBaseOpacity})` : `rgba(255, 255, 255, ${uiBaseOpacity})`} : {}} className="px-[30.36px] pt-4 pb-6 shrink-0 z-10 border-b border-black/5 dark:border-white/5 relative">
               <div className="flex items-center gap-3 overflow-hidden mb-6">
-                <button onClick={() => { setNotesFilter(null); if(activeCategory === CategoryType.BIRTHDAYS || activeCategory === CategoryType.NOTES) setCurrentView('categories'); else setCurrentView('sub-categories'); }} className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-all ${state.user.wallpaper ? 'bg-slate-100/60 backdrop-blur-sm' : 'bg-slate-100 dark:bg-slate-800'}`}><ChevronLeft className="text-slate-600" strokeWidth={1.5} /></button>
+                <button onClick={() => { if(activeCategory === CategoryType.BIRTHDAYS || activeCategory === CategoryType.NOTES) setCurrentView('categories'); else setCurrentView('sub-categories'); }} className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-all ${state.user.wallpaper ? 'bg-slate-100/60 backdrop-blur-sm' : 'bg-slate-100 dark:bg-slate-800'}`}><ChevronLeft className="text-slate-600" strokeWidth={1.5} /></button>
                 <div className="flex items-center gap-4 truncate">
                   <div className={activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-600' : (activeCategory === CategoryType.NOTES ? 'text-slate-500' : CATEGORY_DETAILS[activeCategory].textColor)}>
                     {activeSubCategory && SUB_CATEGORY_DETAILS[activeSubCategory] ? React.cloneElement(SUB_CATEGORY_DETAILS[activeSubCategory].icon as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 }) : (activeCategory === CategoryType.NOTES ? <StickyNote className="w-12 h-12" strokeWidth={1.5} /> : React.cloneElement(CATEGORY_DETAILS[activeCategory].icon as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 }))}
@@ -902,25 +901,6 @@ const App: React.FC = () => {
               <button onClick={() => { if (activeCategory === CategoryType.BIRTHDAYS) setRepeatYearly(true); else if (activeCategory === CategoryType.NOTES) { setNoteIconColor(CategoryType.NOTES); setRepeatYearly(false); } else setRepeatYearly(false); setModalNotifyValue(activeCategory === CategoryType.DOCUMENTS ? 30 : (activeCategory === CategoryType.APPOINTMENTS ? 2 : 7)); setIsModalOpen(true); }} className={`w-full py-[18px] rounded-3xl font-black text-[13.5px] uppercase tracking-[0.1em] shadow-xl flex items-center justify-center gap-3 active:scale-[0.98] transition-all text-white ${activeCategory === CategoryType.BIRTHDAYS ? 'bg-indigo-600' : `bg-gradient-to-br ${CATEGORY_DETAILS[activeCategory].color}`}`}>
                 <Plus className="w-5 h-5" strokeWidth={2.5} /> {activeCategory === CategoryType.NOTES ? t.addNote : t.addDate}
               </button>
-              
-              {activeCategory === CategoryType.NOTES && (
-                <div className="mt-6 grid grid-cols-6 gap-3 animate-in fade-in duration-500">
-                  {[
-                    { type: CategoryType.BIRTHDAYS, color: 'from-rose-400 to-rose-600' },
-                    { type: CategoryType.DOCUMENTS, color: 'from-blue-400 to-blue-600' },
-                    { type: CategoryType.SUBSCRIPTIONS, color: 'from-amber-400 to-amber-500' },
-                    { type: CategoryType.APPOINTMENTS, color: 'from-emerald-400 to-emerald-600' },
-                    { type: CategoryType.VIOLET, color: 'from-violet-400 to-violet-600' },
-                    { type: CategoryType.NOTES, color: 'from-slate-400 to-slate-600' }
-                  ].map(btn => (
-                    <button 
-                      key={btn.type}
-                      onClick={() => setNotesFilter(notesFilter === btn.type ? null : btn.type)}
-                      className={`aspect-square rounded-2xl transition-all active:scale-95 shadow-sm ${notesFilter === btn.type ? `bg-gradient-to-br ${btn.color} scale-110 shadow-lg ring-2 ring-white/30` : `bg-gradient-to-br ${btn.color} opacity-25 grayscale-[0.2]`}`}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
             <div className="flex-1 overflow-y-auto px-[30.36px] pt-6 pb-28 animate-in slide-in-from-right duration-500 relative z-10">
               {activeCategory === CategoryType.BIRTHDAYS && (
@@ -940,12 +920,7 @@ const App: React.FC = () => {
                   ))}
                 </p>
               </div>
-              <div className="space-y-1 relative z-10">
-                {state.dates
-                  .filter(d => d.category === activeCategory && (!activeSubCategory || d.subCategory === activeSubCategory) && (!notesFilter || d.noteColor === notesFilter))
-                  .map(item => <DateCard key={item.id} item={item} language={state.language} theme={state.theme} wallpaper={state.user.wallpaper} onCardClick={openEventDetails} onDeleteClick={(id) => setIsDeleteConfirmOpen(id)} />)
-                }
-              </div>
+              <div className="space-y-1 relative z-10">{state.dates.filter(d => d.category === activeCategory && (!activeSubCategory || d.subCategory === activeSubCategory)).map(item => <DateCard key={item.id} item={item} language={state.language} theme={state.theme} wallpaper={state.user.wallpaper} onCardClick={openEventDetails} onDeleteClick={(id) => setIsDeleteConfirmOpen(id)} />)}</div>
             </div>
           </div>
         )}
@@ -993,7 +968,7 @@ const App: React.FC = () => {
       <nav style={section1BgStyle} className={`fixed bottom-0 left-0 right-0 border-t backdrop-blur-xl flex justify-around items-center py-6 z-50 px-[30.36px] mx-auto w-full max-w-xl border-white/10`}>
         {[ { icon: <Home />, view: 'dashboard' as View }, { icon: <LayoutGrid />, view: 'categories' as View }, { icon: <CalendarIcon />, view: 'calendar' as View }, { icon: <SettingsIcon />, view: 'settings' as View } ].map(item => {
           const isActive = currentView === item.view;
-          return ( <button key={item.view} onClick={() => { setCurrentView(item.view); setActiveCategory(null); setActiveSubCategory(null); setDashboardFilter(null); setNotesFilter(null); setSelectedCalendarDay(new Date()); setIsDirectOnce(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${isActive ? 'text-indigo-600 scale-110' : 'text-slate-400 hover:text-slate-500'}`}>{React.cloneElement(item.icon as React.ReactElement<any>, { className: "w-8 h-8", strokeWidth: 1.5 })}</button> );
+          return ( <button key={item.view} onClick={() => { setCurrentView(item.view); setActiveCategory(null); setActiveSubCategory(null); setDashboardFilter(null); setSelectedCalendarDay(new Date()); setIsDirectOnce(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${isActive ? 'text-indigo-600 scale-110' : 'text-slate-400 hover:text-slate-500'}`}>{React.cloneElement(item.icon as React.ReactElement<any>, { className: "w-8 h-8", strokeWidth: 1.5 })}</button> );
         })}
       </nav>
 
@@ -1397,33 +1372,32 @@ const App: React.FC = () => {
                    <input type="date" value={state.user.dateOfBirth} onChange={(e) => setState(p => ({...p, user: {...p.user, dateOfBirth: e.target.value}}))} className={`flex-1 p-4 rounded-2xl font-bold bg-white dark:bg-slate-800 border dark:border-slate-700 outline-none focus:border-violet-400 text-black`} />
                    <div className="p-4 rounded-2xl bg-violet-600 text-white shadow-md"><CheckCircle2 className="w-5 h-5" /></div>
                  </div>
-                <div className={`p-6 rounded-[2rem] border transition-all ${state.theme === 'dark' ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50 border-indigo-100'}`}>
-            {/* Mensaje de Cumpleaños */}
-            <p className={`text-[16.8px] font-medium leading-relaxed mb-4 italic whitespace-pre-line break-words ${state.theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-              "{SHARE_MESSAGE_CUMPLEAÑOS(state.language, state.user.dateOfBirth || '')}"
-            </p>
-            
-            {/* Botón de Copiar corregido */}
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(SHARE_MESSAGE_CUMPLEAÑOS(state.language, state.user.dateOfBirth || ''));
-                alert(t.copiedToClipboard);
-              }}
-              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
-            >
-              <Copy className="w-4 h-4" strokeWidth={1.5} /> {t.copyText}
-            </button>
-            
-            {/* Botones de acción manual y Google */}
-            <div className="grid grid-cols-1 gap-4 mt-6">
-              <button onClick={() => { setBirthDay('01'); setBirthMonth('01'); setIsManualAddModalOpen(true); }} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
-                <Plus className="w-4 h-4" strokeWidth={2.5} /> {t.addManually}
-              </button>
-              <button onClick={handleImportGoogleCalendar} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
-                <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" /> {t.importGoogleCalendar}
-              </button>
+              </div>
+              <div className={`p-6 rounded-[2rem] border transition-all ${state.theme === 'dark' ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50 border-indigo-100'}`}>
+                <p className={`text-[16.8px] font-medium leading-relaxed mb-4 italic whitespace-pre-line break-words ${state.theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>"{SHARE_MESSAGE_CUMPLEAÑOS(state.language, state.user.dateOfBirth || '')}"</p>
+                <button onClick={() => { navigator.clipboard.writeText(SHARE_MESSAGE_CUMPLEAÑOS(state.language, state.user.dateOfBirth || '')); alert(t.copiedToClipboard); }} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"><Copy className="w-4 h-4" strokeWidth={1.5} /> {t.copyText}</button>
+                
+                <div className="grid grid-cols-1 gap-4 mt-6">
+                  <button onClick={() => { setBirthDay('01'); setBirthMonth('01'); setIsManualAddModalOpen(true); }} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
+                    <Plus className="w-4 h-4" strokeWidth={2.5} /> {t.addManually}
+                  </button>
+                  <button onClick={handleImportGoogleCalendar} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
+                    <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" /> {t.importGoogleCalendar}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {isManualAddModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[800] flex items-end justify-center">
+          <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[92vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
+            <div className="flex justify-between items-start mb-6">
+              <div><h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{t.manualAddTitle}</h2><p className="text-[11px] font-bold uppercase tracking-tight mt-2 text-slate-400">{t.manualAddSub}</p></div>
+              <button onClick={() => setIsManualAddModalOpen(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button>
+            </div>
             <form onSubmit={(e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
@@ -1466,7 +1440,7 @@ const App: React.FC = () => {
             </form>
           </div>
         </div>
-      )
+      )}
 
       {isPaywallOpen && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[1200] flex items-center justify-center p-6">
@@ -1551,33 +1525,32 @@ const App: React.FC = () => {
         </div>
       )}
 
-        {isExportModalOpen && (
+      {isExportModalOpen && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1300] flex items-center justify-center p-8">
-          <div style={modalBgStyle} className="w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl">
-            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
-              <Download className="w-8 h-8" />
-            </div>
-            <h3 className="text-sm font-black mb-8 uppercase tracking-tighter">{t.selectFormat}</h3>
-            <div className="space-y-3">
-              <button onClick={() => handleExport('csv')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3">
-                <FileSpreadsheet className="w-4 h-4 text-emerald-500" /> {t.excelFormat}
-              </button>
-              <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3">
-                <FileTextIcon className="w-4 h-4 text-rose-500" /> {t.pdfFormat}
-              </button>
-              <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3">
-                <FileCode className="w-4 h-4 text-slate-500" /> {t.textFormat}
-              </button>
-            </div>
-            <button onClick={() => setIsExportModalOpen(false)} className="mt-8 font-black text-[10px] uppercase text-slate-400">
-              {t.no}
-            </button>
+          <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl`}>
+             <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><Download className="w-8 h-8" /></div>
+             <h3 className="text-sm font-black mb-8 uppercase tracking-tighter">{t.selectFormat}</h3>
+             <div className="space-y-3">
+               <button onClick={() => handleExport('csv')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3"><FileSpreadsheet className="w-4 h-4 text-emerald-500" /> {t.excelFormat}</button>
+               <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3"><FileTextIcon className="w-4 h-4 text-rose-500" /> {t.pdfFormat}</button>
+               <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3"><FileCode className="w-4 h-4 text-slate-500" /> {t.textFormat}</button>
+             </div>
+             <button onClick={() => setIsExportModalOpen(false)} className="mt-8 font-black text-[10px] uppercase text-slate-400">{t.no}</button>
           </div>
         </div>
       )}
     </div>
-  </div>
-);
+  );
 };
- 
+
 export default App;
+
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
