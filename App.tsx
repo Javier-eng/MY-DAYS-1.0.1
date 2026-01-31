@@ -1551,7 +1551,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-         {isExportModalOpen && (
+          {isExportModalOpen && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1300] flex items-center justify-center p-8">
           <div style={modalBgStyle} className="w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl">
              <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
@@ -1576,7 +1576,8 @@ const App: React.FC = () => {
         </div>
       )}
     </div>
-  );
+  </div>
+);
 };
  
 export default App;
