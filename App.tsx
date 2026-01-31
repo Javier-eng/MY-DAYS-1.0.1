@@ -1466,7 +1466,7 @@ const App: React.FC = () => {
             </form>
           </div>
         </div>
-      )}
+      )
 
       {isPaywallOpen && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[1200] flex items-center justify-center p-6">
@@ -1566,17 +1566,4 @@ const App: React.FC = () => {
         </div>
       )}
     </div>
-  );
-};
-
 export default App;
-
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-}
