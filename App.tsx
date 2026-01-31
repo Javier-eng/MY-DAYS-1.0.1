@@ -1551,32 +1551,32 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {isExportModalOpen && (
+    {isExportModalOpen && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1300] flex items-center justify-center p-8">
-          <div style={modalBgStyle} className="w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl">
-             <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
-               <Download className="w-8 h-8" />
-             </div>
+          <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl`}>
+             <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><Download className="w-8 h-8" /></div>
              <h3 className="text-sm font-black mb-8 uppercase tracking-tighter">{t.selectFormat}</h3>
              <div className="space-y-3">
-               <button onClick={() => handleExport('csv')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3">
-                 <FileSpreadsheet className="w-4 h-4 text-emerald-500" /> {t.excelFormat}
-               </button>
-               <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3">
-                 <FileTextIcon className="w-4 h-4 text-rose-500" /> {t.pdfFormat}
-               </button>
-               <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3">
-                 <FileCode className="w-4 h-4 text-slate-500" /> {t.textFormat}
-               </button>
+               <button onClick={() => handleExport('csv')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3"><FileSpreadsheet className="w-4 h-4 text-emerald-500" /> {t.excelFormat}</button>
+               <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3"><FileTextIcon className="w-4 h-4 text-rose-500" /> {t.pdfFormat}</button>
+               <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3"><FileCode className="w-4 h-4 text-slate-500" /> {t.textFormat}</button>
              </div>
-             <button onClick={() => setIsExportModalOpen(false)} className="mt-8 font-black text-[10px] uppercase text-slate-400">
-               {t.no}
-             </button>
+             <button onClick={() => setIsExportModalOpen(false)} className="mt-8 font-black text-[10px] uppercase text-slate-400">{t.no}</button>
           </div>
         </div>
       )}
     </div>
   );
 };
- 
+
 export default App;
+
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
