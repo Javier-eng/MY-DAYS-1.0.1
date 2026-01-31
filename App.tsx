@@ -1576,7 +1576,8 @@ const App: React.FC = () => {
         </div>
       )}
     </div>
-  );
+  </div>
+);
 };
  
 export default App;
