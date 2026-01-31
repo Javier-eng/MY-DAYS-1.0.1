@@ -1,0 +1,8 @@
+{
+  "name": "Lumina Creative Studio",
+  "description": "An all-in-one AI-powered creative workspace for generating text, high-quality images, and lifelike speech using the Gemini API.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
