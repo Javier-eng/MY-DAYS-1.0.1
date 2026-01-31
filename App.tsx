@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
 import { 
   Plus, LayoutGrid, Home, Calendar as CalendarIcon, 
   Settings as SettingsIcon, Bell, ChevronRight, ChevronLeft,
@@ -16,6 +17,7 @@ const SHARED_GLOW_EFFECT = "shadow-[0_0_40px_-5px_rgba(255,255,255,0.22),0_0_15p
 const APP_URL = "https://play.google.com/store/apps/details?id=com.mydays&myexpenses.app"; 
 const GITHUB_WALLPAPER_URL = "https://raw.githubusercontent.com/Javier-eng/MYDAYSPICS/refs/heads/main/DESK2.png";
 
+// Extend translations with new required keys
 const EXTENDED_TRANSLATIONS = {
   ...TRANSLATIONS,
   en: {
@@ -28,7 +30,7 @@ const EXTENDED_TRANSLATIONS = {
     namePlaceholder: 'Friend\'s Name',
     dateOfBirth: 'DATE OF BIRTH',
     activateNotifications: 'ACTIVATE NOTIFICATIONS',
-    notifStatus: 'Status: System Alerts Enabled'
+    notifStatus: 'Status: Ready for alerts'
   },
   es: {
     ...TRANSLATIONS.es,
@@ -40,7 +42,7 @@ const EXTENDED_TRANSLATIONS = {
     namePlaceholder: 'Nombre del Amigo/a',
     dateOfBirth: 'FECHA DE NACIMIENTO',
     activateNotifications: 'ACTIVAR NOTIFICACIONES',
-    notifStatus: 'Estado: Alertas de sistema activas'
+    notifStatus: 'Estado: Listo para alertas'
   }
 };
 
@@ -122,21 +124,21 @@ const App: React.FC = () => {
   });
   const [carouselIndex, setCarouselIndex] = useState(0);
 
-  // Función de Permisos de Notificaciones para App Store
+  // Solicitud de Permisos para Notificaciones (Requisito App Store / PWA)
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) {
-      alert(state.language === 'es' ? "Tu navegador no soporta notificaciones de sistema." : "Your browser does not support system notifications.");
+      alert(state.language === 'es' ? "Las notificaciones no son compatibles con este navegador" : "Notifications are not supported by this browser");
       return;
     }
     try {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
         alert(state.language === 'es' ? "¡Permiso concedido! Recibirás alertas importantes." : "Permission granted! You will receive important alerts.");
-      } else if (permission === "denied") {
-        alert(state.language === 'es' ? "Has rechazado los permisos. Actívalos manualmente en ajustes del sistema." : "Permissions denied. Enable them manually in system settings.");
+      } else {
+        alert(state.language === 'es' ? "Has denegado el permiso para notificaciones." : "Notification permission denied.");
       }
     } catch (error) {
-      console.error("Error with notifications:", error);
+      console.error("Error requesting permission:", error);
     }
   };
 
@@ -1007,11 +1009,11 @@ const App: React.FC = () => {
                    setIsNotifTimeModalOpen(true);
                }}><div className="flex items-center gap-3"><Clock className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{t.generalNotifTime}</span></div><span className="text-[11px] font-black text-indigo-600 dark:text-white uppercase">{formatTimeTo12h(state.globalSettings.defaultNotificationTime)}</span></div><div className="flex items-center justify-between cursor-pointer" onClick={() => setIsInfoModalOpen(true)}><div className="flex items-center gap-3"><Info className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{t.info}</span></div><ChevronRight className="w-4 h-4 text-slate-300" strokeWidth={1.5} /></div></div>
                  
-                 {/* BOTÓN DE NOTIFICACIONES PARA APP STORE / PWA BUILDER */}
+                 {/* Notification Settings Section for App Store / PWA */}
                  <div className={`rounded-[2.5rem] p-6 border ${state.theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100 shadow-sm'} space-y-4 shadow-sm`}>
                     <div className="flex items-center gap-3">
                       <Bell className="text-indigo-600 w-5 h-5" strokeWidth={1.5} />
-                      <span className="text-[11px] font-black uppercase">{state.language === 'es' ? 'ALERTAS DEL DISPOSITIVO' : 'DEVICE ALERTS'}</span>
+                      <span className="text-[11px] font-black uppercase">{state.language === 'es' ? 'NOTIFICACIONES DEL SISTEMA' : 'SYSTEM NOTIFICATIONS'}</span>
                     </div>
                     <button 
                       onClick={requestNotificationPermission}
@@ -1024,6 +1026,7 @@ const App: React.FC = () => {
 
                  <div className={`rounded-[2.5rem] p-6 border ${state.theme === 'dark' ? (state.user.wallpaper ? 'bg-slate-800/70 backdrop-blur-md border-slate-700' : 'bg-slate-800 border-slate-700') : (state.user.wallpaper ? 'bg-white/70 border-slate-100 backdrop-blur-md' : 'bg-white border-slate-100 shadow-sm')} space-y-6 shadow-sm`}><div className="flex items-center justify-between"><div className="flex items-center gap-3"><ImageIcon className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{state.language === 'es' ? 'FONDO DE PANTALLA' : 'WALLPAPER'}</span>{!state.isPro && <Crown className="w-3.5 h-3.5 text-amber-500" strokeWidth={1.5} />}</div><div className="flex items-center gap-2">{state.user.wallpaper && <button onClick={() => setIsWallpaperDeleteConfirmOpen(true)} className="p-2 text-rose-500 rounded-full active:scale-90 transition-all"><Trash2 className="w-4 h-4" strokeWidth={1.5} /></button>}<button onClick={() => { if (!state.isPro) setIsPaywallOpen(true); else wallpaperInputRef.current?.click(); }} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-md">{state.user.wallpaper ? (state.language === 'es' ? 'CAMBIAR' : 'CHANGE') : (state.language === 'es' ? 'SUBIR FOTO' : 'UPLOAD')}</button><input type="file" ref={wallpaperInputRef} onChange={handleWallpaperUpload} accept="image/*" className="hidden" /></div></div>{state.user.wallpaper && (<div className="space-y-2 animate-in slide-in-from-top duration-300"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{state.language === 'es' ? 'OPACIDAD DEL FONDO' : 'WALLPAPER OPACITY'}</label><input type="range" min="0" max="1" step="0.01" value={state.user.wallpaperOpacity} onChange={(e) => { if (!state.isPro) setIsPaywallOpen(true); else setState(p => ({...p, user: {...p.user, wallpaperOpacity: parseFloat(e.target.value)}})); }} className="w-full h-1.5 bg-indigo-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" /></div>)}</div>
 
+                 {/* Title Customization Section */}
                  <div className={`rounded-[2.5rem] p-6 border ${state.theme === 'dark' ? (state.user.wallpaper ? 'bg-slate-800/70 backdrop-blur-md border-slate-700' : 'bg-slate-800 border-slate-700') : (state.user.wallpaper ? 'bg-white/70 border-slate-100 backdrop-blur-md' : 'bg-white border-slate-100 shadow-sm')} space-y-6 shadow-sm`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -1045,13 +1048,13 @@ const App: React.FC = () => {
                         <div className="flex bg-slate-100 dark:bg-slate-700 rounded-xl p-1 shadow-inner">
                             <button 
                                 onClick={() => setState(p => ({...p, user: {...p.user, titleCase: 'uppercase'}}))}
-                                className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${state.user.titleCase !== 'capitalize' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400'}`}
+                                className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${state.user.titleCase !== 'capitalize' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400'}`}
                             >
                                 AA
                             </button>
                             <button 
                                 onClick={() => setState(p => ({...p, user: {...p.user, titleCase: 'capitalize'}}))}
-                                className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${state.user.titleCase === 'capitalize' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400'}`}
+                                className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${state.user.titleCase === 'capitalize' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400'}`}
                             >
                                 Aa
                             </button>
@@ -1142,20 +1145,132 @@ const App: React.FC = () => {
               setIsModalOpen(false); setAudioBase64(null); setAttachedFileBase64(null); setAttachedFileName(null); 
             }} className="space-y-6 pb-12">
               <div className="space-y-2"><label className={`text-[10px] font-black uppercase tracking-widest px-1 ${createModalStyles.text}`}>{t.title}</label><input required name="title" autoFocus className={`w-full p-6 rounded-[2.2rem] font-bold text-[18.5px] outline-none border transition-all ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 focus:border-indigo-400` : `bg-slate-50 border-slate-100 focus:border-indigo-300`} ${activeCategory === CategoryType.NOTES ? createModalStyles.text : 'text-slate-900 dark:text-white'}`} /></div>
-              <div className="space-y-2"><label className={`text-[10px] font-black uppercase tracking-widest px-1 ${createModalStyles.text}`}>{t.notes}</label><textarea name="notes" className={`w-full p-6 rounded-[2.2rem] font-bold text-[18.5px] resize-none outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 focus:border-slate-500` : `bg-slate-50 border-slate-100 focus:border-slate-300`} ${createModalStyles.text}`} rows={4} /></div>
+              
+              <div className="space-y-2">
+                <label className={`text-[10px] font-black uppercase tracking-widest px-1 ${createModalStyles.text}`}>{t.notes}</label>
+                <textarea name="notes" className={`w-full p-6 rounded-[2.2rem] font-bold text-[18.5px] resize-none outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 focus:border-slate-500` : `bg-slate-50 border-slate-100 focus:border-slate-300`} ${createModalStyles.text}`} rows={4} />
+              </div>
+
               {activeCategory === CategoryType.NOTES && (
-                <div className="p-8 rounded-[2.5rem] bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-500/20"><label className="text-[11px] font-black text-violet-600 dark:text-violet-300 uppercase tracking-widest px-1 block mb-6 text-center">{t.chooseColor}</label><div className="flex items-center justify-between w-full">{[{ type: CategoryType.BIRTHDAYS, color: '#ec4899' }, { type: CategoryType.DOCUMENTS, color: '#3b82f6' }, { type: CategoryType.SUBSCRIPTIONS, color: '#f97316' }, { type: CategoryType.APPOINTMENTS, color: '#10b981' }, { type: CategoryType.VIOLET, color: '#8b5cf6' }, { type: CategoryType.NOTES, color: '#64748b' }].map(item => (<button key={item.type} type="button" onClick={() => setNoteIconColor(item.type)} className={`w-10 h-10 rounded-full shrink-0 border-4 transition-all ${noteIconColor === item.type ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-40 hover:opacity-100'}`} style={{ backgroundColor: item.color }} />))}</div></div>
+                <div className="p-8 rounded-[2.5rem] bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-500/20">
+                  <label className="text-[11px] font-black text-violet-600 dark:text-violet-300 uppercase tracking-widest px-1 block mb-6 text-center">{t.chooseColor}</label>
+                  <div className="flex items-center justify-between w-full">
+                    {[
+                      { type: CategoryType.BIRTHDAYS, color: '#ec4899' }, 
+                      { type: CategoryType.DOCUMENTS, color: '#3b82f6' }, 
+                      { type: CategoryType.SUBSCRIPTIONS, color: '#f97316' }, 
+                      { type: CategoryType.APPOINTMENTS, color: '#10b981' }, 
+                      { type: CategoryType.VIOLET, color: '#8b5cf6' },      
+                      { type: CategoryType.NOTES, color: '#64748b' }        
+                    ].map(item => (
+                      <button
+                        key={item.type}
+                        type="button"
+                        onClick={() => setNoteIconColor(item.type)}
+                        className={`w-10 h-10 rounded-full shrink-0 border-4 transition-all ${noteIconColor === item.type ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-40 hover:opacity-100'}`}
+                        style={{ backgroundColor: item.color }}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
+
               {activeCategory !== CategoryType.NOTES && (
-                <div className="space-y-2"><label className={`text-[10px] font-black uppercase tracking-widest px-1 ${activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-500' : createModalStyles.label}`}>{t.date}</label>{activeCategory === CategoryType.BIRTHDAYS ? (<div className="space-y-4"><div className="grid grid-cols-2 gap-4"><select value={birthDay} onChange={(e) => setBirthDay(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>{Array.from({length: 31}, (_, i) => String(i + 1).padStart(2, '0')).map(d => <option key={d} value={d}>{d}</option>)}</select><select value={birthMonth} onChange={(e) => setBirthMonth(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>{Array.from({length: 12}, (_, i) => { const m = String(i + 1).padStart(2, '0'); const label = new Date(2000, i, 1).toLocaleString(state.language, { month: 'long' }); return <option key={m} value={m}>{label.toUpperCase()}</option> })}</select></div><div className="flex items-center justify-between p-6 rounded-[2.2rem] border bg-slate-50 dark:bg-slate-700/50 border-slate-100 dark:border-slate-700"><div className="flex items-center gap-3"><Repeat className={`w-5 h-5 ${repeatYearly ? 'text-indigo-600' : 'text-slate-400'}`} strokeWidth={1.5} /><span className={`text-xs font-black uppercase ${repeatYearly ? 'text-indigo-600' : 'text-slate-400'}`}>{t.repeatYearly}</span></div><button type="button" onClick={() => setRepeatYearly(!repeatYearly)} className={`w-12 h-6 rounded-full relative transition-all ${repeatYearly ? 'bg-indigo-600' : 'bg-slate-300'} flex items-center`}><div className={`absolute w-4 h-4 rounded-full bg-white shadow-md transition-all ${repeatYearly ? 'right-1' : 'left-1'}`} /></button></div></div>) : activeSubCategory === 'BANCO_TARJETAS' ? (<div className="grid grid-cols-2 gap-4"><select value={cardExpMonth} onChange={(e) => setCardExpMonth(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>{Array.from({length: 12}, (_, i) => String(i + 1).padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}</select><select value={cardExpYear} onChange={(e) => setCardExpYear(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>{Array.from({length: 2101 - new Date().getFullYear()}, (_, i) => String(new Date().getFullYear() + i)).map(y => <option key={y} value={y}>{y}</option>)}</select></div>) : (<input required name="date" type="date" defaultValue={selectedCalendarDay ? formatDateForInput(selectedCalendarDay) : formatDateForInput(new Date())} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`} />)}</div>
+                <div className="space-y-2"><label className={`text-[10px] font-black uppercase tracking-widest px-1 ${activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-500' : createModalStyles.label}`}>{t.date}</label>
+                  {activeCategory === CategoryType.BIRTHDAYS ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <select value={birthDay} onChange={(e) => setBirthDay(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>
+                          {Array.from({length: 31}, (_, i) => String(i + 1).padStart(2, '0')).map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                        <select value={birthMonth} onChange={(e) => setBirthMonth(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>
+                          {Array.from({length: 12}, (_, i) => {
+                             const m = String(i + 1).padStart(2, '0');
+                             const label = new Date(2000, i, 1).toLocaleString(state.language, { month: 'long' });
+                             return <option key={m} value={m}>{label.toUpperCase()}</option>
+                          })}
+                        </select>
+                      </div>
+                      <div className="flex items-center justify-between p-6 rounded-[2.2rem] border bg-slate-50 dark:bg-slate-700/50 border-slate-100 dark:border-slate-700">
+                        <div className="flex items-center gap-3">
+                          <Repeat className={`w-5 h-5 ${repeatYearly ? 'text-indigo-600' : 'text-slate-400'}`} strokeWidth={1.5} />
+                          <span className={`text-xs font-black uppercase ${repeatYearly ? 'text-indigo-600' : 'text-slate-400'}`}>{t.repeatYearly}</span>
+                        </div>
+                        <button type="button" onClick={() => setRepeatYearly(!repeatYearly)} className={`w-12 h-6 rounded-full relative transition-all ${repeatYearly ? 'bg-indigo-600' : 'bg-slate-300'} flex items-center`}>
+                          <div className={`absolute w-4 h-4 rounded-full bg-white shadow-md transition-all ${repeatYearly ? 'right-1' : 'left-1'}`} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : activeSubCategory === 'BANCO_TARJETAS' ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <select value={cardExpMonth} onChange={(e) => setCardExpMonth(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>
+                        {Array.from({length: 12}, (_, i) => String(i + 1).padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <select value={cardExpYear} onChange={(e) => setCardExpYear(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>
+                        {Array.from({length: 2101 - new Date().getFullYear()}, (_, i) => String(new Date().getFullYear() + i)).map(y => <option key={y} value={y}>{y}</option>)}
+                      </select>
+                    </div>
+                  ) : (
+                    <input required name="date" type="date" defaultValue={selectedCalendarDay ? formatDateForInput(selectedCalendarDay) : formatDateForInput(new Date())} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`} />
+                  )}
+                </div>
               )}
+              
               {activeCategory === CategoryType.APPOINTMENTS && (
-                <div className="space-y-2"><label className={`text-[10px] font-black uppercase tracking-widest px-1 ${createModalStyles.label}`}>{t.time}</label><div className="grid grid-cols-[1fr_1fr_1fr] gap-3"><select value={apptHour} onChange={(e) => setApptHour(e.target.value)} className={`w-full p-5 rounded-3xl font-black outline-none border text-center ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>{Array.from({length: 12}, (_, i) => String(i === 0 ? 12 : i).padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}</select><select value={apptMin} onChange={(e) => setApptMin(e.target.value)} className={`w-full p-5 rounded-3xl font-black outline-none border text-center ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>{Array.from({length: 60}, (_, i) => String(i).padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}</select><button type="button" onClick={() => setApptAmPm(prev => prev === 'AM' ? 'PM' : 'AM')} className={`w-full p-5 rounded-3xl font-black outline-none border transition-all ${apptAmPm === 'AM' ? 'bg-emerald-500 text-white border-emerald-600 shadow-md' : 'bg-indigo-600 text-white border-indigo-700 shadow-md'}`}>{apptAmPm}</button></div></div>
+                <div className="space-y-2">
+                  <label className={`text-[10px] font-black uppercase tracking-widest px-1 ${createModalStyles.label}`}>{t.time}</label>
+                  <div className="grid grid-cols-[1fr_1fr_1fr] gap-3">
+                    <select value={apptHour} onChange={(e) => setApptHour(e.target.value)} className={`w-full p-5 rounded-3xl font-black outline-none border text-center ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-100 text-slate-900'}`}>
+                      {Array.from({length: 12}, (_, i) => String(i === 0 ? 12 : i).padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                    <select value={apptMin} onChange={(e) => setApptMin(e.target.value)} className={`w-full p-5 rounded-3xl font-black outline-none border text-center ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-100 text-slate-900'}`}>
+                      {Array.from({length: 60}, (_, i) => String(i).padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <button type="button" onClick={() => setApptAmPm(prev => prev === 'AM' ? 'PM' : 'AM')} className={`w-full p-5 rounded-3xl font-black outline-none border transition-all ${apptAmPm === 'AM' ? 'bg-emerald-500 text-white border-emerald-600 shadow-md' : 'bg-indigo-600 text-white border-indigo-700 shadow-md'}`}>
+                      {apptAmPm}
+                    </button>
+                  </div>
+                </div>
               )}
-              <div className="grid grid-cols-2 gap-4"><div className={`p-4 rounded-3xl border flex flex-col items-center justify-center gap-2 ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-100'}`}><div className="flex items-center gap-1.5"><p className="text-[10.7px] font-black text-slate-400 uppercase">{t.audioNote}</p>{!state.isPro && <Crown className="w-2.5 h-2.5 text-amber-500" />}</div>{audioBase64 ? (<div className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500" /><button type="button" onClick={() => setAudioBase64(null)} className="text-rose-500 p-1"><X className="w-4 h-4" /></button></div>) : (<button type="button" onMouseDown={startRecording} onMouseUp={stopRecording} onTouchStart={startRecording} onTouchEnd={stopRecording} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-rose-500 animate-pulse scale-110' : 'bg-indigo-600'} text-white shadow-lg`}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-5 h-5" />}</button>)}{isRecording && <p className="text-[8px] font-black text-rose-500">{recordingTime}s / 30s</p>}</div><div className={`p-4 rounded-3xl border flex flex-col items-center justify-center gap-2 ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-100'}`}><div className="flex items-center gap-1.5"><p className="text-[10.7px] font-black text-slate-400 uppercase">{t.addFile}</p>{!state.isPro && <Crown className="w-2.5 h-2.5 text-amber-500" />}</div>{attachedFileBase64 ? (<div className="flex items-center gap-2 overflow-hidden"><FileTextIcon className="w-4 h-4 text-emerald-500" /><p className="text-[8px] truncate max-w-[50px] font-bold">{attachedFileName}</p><button type="button" onClick={() => { setAttachedFileBase64(null); setAttachedFileName(null); }} className="text-rose-500 p-1"><X className="w-3 h-3" /></button></div>) : (<button type="button" onClick={() => attachmentInputRef.current?.click()} className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-95 shadow-md"><Upload className="w-5 h-5" /></button>)}<input type="file" ref={attachmentInputRef} onChange={handleAttachmentUpload} className="hidden" /></div></div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-4 rounded-3xl border flex flex-col items-center justify-center gap-2 ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-100'}`}>
+                  <div className="flex items-center gap-1.5"><p className="text-[10.7px] font-black text-slate-400 uppercase">{t.audioNote}</p>{!state.isPro && <Crown className="w-2.5 h-2.5 text-amber-500" />}</div>
+                  {audioBase64 ? (
+                    <div className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500" /><button type="button" onClick={() => setAudioBase64(null)} className="text-rose-500 p-1"><X className="w-4 h-4" /></button></div>
+                  ) : (
+                    <button type="button" onMouseDown={startRecording} onMouseUp={stopRecording} onTouchStart={startRecording} onTouchEnd={stopRecording} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-rose-500 animate-pulse scale-110' : 'bg-indigo-600'} text-white shadow-lg`}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-5 h-5" />}</button>
+                  )}
+                  {isRecording && <p className="text-[8px] font-black text-rose-500">{recordingTime}s / 30s</p>}
+                </div>
+                <div className={`p-4 rounded-3xl border flex flex-col items-center justify-center gap-2 ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-100'}`}>
+                  <div className="flex items-center gap-1.5"><p className="text-[10.7px] font-black text-slate-400 uppercase">{t.addFile}</p>{!state.isPro && <Crown className="w-2.5 h-2.5 text-amber-500" />}</div>
+                  {attachedFileBase64 ? (
+                    <div className="flex items-center gap-2 overflow-hidden"><FileTextIcon className="w-4 h-4 text-emerald-500" /><p className="text-[8px] truncate max-w-[50px] font-bold">{attachedFileName}</p><button type="button" onClick={() => { setAttachedFileBase64(null); setAttachedFileName(null); }} className="text-rose-500 p-1"><X className="w-3 h-3" /></button></div>
+                  ) : (
+                    <button type="button" onClick={() => attachmentInputRef.current?.click()} className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-95 shadow-md"><Upload className="w-5 h-5" /></button>
+                  )}
+                  <input type="file" ref={attachmentInputRef} onChange={handleAttachmentUpload} className="hidden" />
+                </div>
+              </div>
+
               {activeCategory !== CategoryType.NOTES && (
-                <div className={`p-6 rounded-[2.2rem] border relative ${activeCategory === CategoryType.BIRTHDAYS ? 'bg-indigo-50 border-indigo-100' : createModalStyles.light} transition-all`}><label className={`text-[11.2px] font-black uppercase tracking-widest text-center block mb-4 italic ${activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-500' : createModalStyles.label}`}>{t.howMuchAdvance}</label><div className="flex items-center justify-between mb-2"><span className={`text-xs font-black uppercase ${activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-600' : createModalStyles.text}`}>{t.alertPrefix} {getAdvanceLabel(activeCategory, modalNotifyValue)} {modalNotifyValue !== 0 || activeCategory === CategoryType.APPOINTMENTS ? t.beforeSuffix : ''}</span></div><input type="range" min="0" max={activeCategory === CategoryType.APPOINTMENTS ? "55" : (activeCategory === CategoryType.DOCUMENTS ? "90" : "60")} step="1" value={modalNotifyValue} onChange={(e) => setModalNotifyValue(parseInt(e.target.value))} className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${activeCategory === CategoryType.BIRTHDAYS ? 'accent-indigo-600' : createModalStyles.accent} bg-slate-200 dark:bg-slate-600`} /></div>
+                <div className={`p-6 rounded-[2.2rem] border relative ${activeCategory === CategoryType.BIRTHDAYS ? 'bg-indigo-50 border-indigo-100' : createModalStyles.light} transition-all`}>
+                  <label className={`text-[11.2px] font-black uppercase tracking-widest text-center block mb-4 italic ${activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-500' : createModalStyles.label}`}>{t.howMuchAdvance}</label>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-xs font-black uppercase ${activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-600' : createModalStyles.text}`}>{t.alertPrefix} {getAdvanceLabel(activeCategory, modalNotifyValue)} {modalNotifyValue !== 0 || activeCategory === CategoryType.APPOINTMENTS ? t.beforeSuffix : ''}</span>
+                  </div>
+                  <input type="range" min="0" max={activeCategory === CategoryType.APPOINTMENTS ? "55" : (activeCategory === CategoryType.DOCUMENTS ? "90" : "60")} step="1" value={modalNotifyValue} onChange={(e) => setModalNotifyValue(parseInt(e.target.value))} className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${activeCategory === CategoryType.BIRTHDAYS ? 'accent-indigo-600' : createModalStyles.accent} bg-slate-200 dark:bg-slate-600`} />
+                </div>
               )}
+
+              {activeCategory === CategoryType.NOTES && (
+                <div className="space-y-2">
+                  <label className={`text-[10px] font-black uppercase tracking-widest px-1 ${createModalStyles.text}`}>{t.date}</label>
+                  <input required name="date" type="date" defaultValue={selectedCalendarDay ? formatDateForInput(selectedCalendarDay) : formatDateForInput(new Date())} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 focus:border-slate-500` : `bg-slate-50 border-slate-100 focus:border-slate-300`} ${createModalStyles.text}`} />
+                </div>
+              )}
+
               <button type="submit" className={`w-full ${activeCategory === CategoryType.BIRTHDAYS ? 'bg-indigo-600' : createModalStyles.saveBtn} text-white py-[26px] rounded-[2.5rem] font-black uppercase tracking-[0.2em] shadow-2xl mt-4 active:scale-95 transition-all text-[15px] flex items-center justify-center gap-3`}><Save className="w-6 h-6" strokeWidth={1.5} /> {t.save}</button>
             </form>
           </div>
@@ -1165,8 +1280,285 @@ const App: React.FC = () => {
       {isDetailModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[300] flex items-end justify-center">
           <div style={modalBgStyle} className={`w-full max-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[88vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
-            <div className="flex justify-between items-start mb-6"><div className="flex flex-col w-full"><div className="flex items-center gap-4 mb-2"><div className={selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text}>{selectedEvent.category === CategoryType.NOTES ? ( <StickyNote className="w-12 h-12" strokeWidth={1.5} /> ) : ( React.cloneElement((selectedEvent.category === CategoryType.BIRTHDAYS ? CATEGORY_DETAILS[selectedEvent.category].icon : (SUB_CATEGORY_DETAILS[selectedEvent.subCategory]?.icon || CATEGORY_DETAILS[selectedEvent.category].icon)) as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 }) )}</div><h2 className={`text-[26.5px] font-black uppercase leading-tight ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text}`}>{selectedEvent.category === CategoryType.BIRTHDAYS ? t.birthdays : selectedEvent.category === CategoryType.NOTES ? t.notes : (selectedEvent.subCategory ? (t as any)[SUB_CATEGORY_DETAILS[selectedEvent.subCategory].labelKey] : (t as any)[selectedEvent.category.toLowerCase()])}</h2></div><h2 className={`text-[26.5px] font-black uppercase leading-tight mb-2 mt-6 ${selectedEvent.category === CategoryType.NOTES ? detailModalStyles.text : 'text-slate-700 dark:text-white'}`}>{selectedEvent.title}</h2></div><button onClick={() => { setIsDetailModalOpen(false); setIsPlaying(false); if (audioPreviewRef.current) { audioPreviewRef.current.pause(); audioPreviewRef.current = null; } }} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-700 dark:text-white"/></button></div>
-            <div className="space-y-6 pb-12"><div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700"><p className={`text-[9px] font-black uppercase tracking-widest mb-2 ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-500' : detailModalStyles.label}`}>{t.date}</p><p className={`font-bold text-[23.6px] uppercase ${selectedEvent.category === CategoryType.NOTES ? detailModalStyles.text : 'text-slate-700 dark:text-white'}`}>{new Date(selectedEvent.date).toLocaleDateString(state.language, { day: 'numeric', month: 'long', year: selectedEvent.repeatYearly ? undefined : 'numeric' })} {selectedEvent.time ? `- ${formatTimeTo12h(selectedEvent.time)}` : ''}</p></div>{selectedEvent.notes && (<div className="p-6 rounded-[2.2rem] bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700"><p className={`text-[9px] font-black uppercase tracking-widest mb-3 opacity-60 ${detailModalStyles.text}`}>{t.notes}</p><p className={`text-[26px] font-medium leading-relaxed whitespace-pre-wrap ${selectedEvent.category === CategoryType.NOTES ? detailModalStyles.text : 'text-slate-700 dark:text-white'}`}>{selectedEvent.notes}</p></div>)}{selectedEvent.category !== CategoryType.NOTES && (<div style={modalBgStyle} className={`p-6 rounded-[2.2rem] border relative shadow-sm`}><Edit2 className={`absolute top-4 right-4 w-3 h-3 ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text} opacity-60`} strokeWidth={1.5} /><label className={`text-[13.2px] font-black uppercase tracking-widest text-center block mb-4 italic ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text}`}>{t.howMuchAdvance}</label><div className="flex items-center justify-between mb-3"><div className={`flex items-center gap-2 ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text}`}><span className="text-sm font-black uppercase">{t.alertPrefix} {getAdvanceLabel(selectedEvent.category, detailNotifyValue)} {(selectedEvent.category === CategoryType.APPOINTMENTS || detailNotifyValue !== 0) ? t.beforeSuffix : ''}</span></div></div><input type="range" min="0" max={selectedEvent.category === CategoryType.APPOINTMENTS ? "55" : (selectedEvent.category === CategoryType.DOCUMENTS ? "90" : "60")} step="1" value={detailNotifyValue} onChange={(e) => setDetailNotifyValue(parseInt(e.target.value))} className={`w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'accent-indigo-600' : detailModalStyles.accent}`} /></div>)}{selectedEvent.audioData && (<div className="p-5 rounded-[2rem] bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between"><div className="flex items-center gap-3"><Volume2 className="text-indigo-600" /><p className="text-[10px] font-black uppercase text-indigo-600 dark:text-white">{t.audioNote}</p></div><button onClick={() => { if (!audioPreviewRef.current) { audioPreviewRef.current = new Audio(selectedEvent.audioData); audioPreviewRef.current.onended = () => setIsPlaying(false); } if (isPlaying) { audioPreviewRef.current.pause(); setIsPlaying(false); } else { audioPreviewRef.current.play(); setIsPlaying(true); } }} className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center active:scale-90 transition-all">{isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}</button></div>)}{selectedEvent.fileData && (<div className="p-5 rounded-[2rem] bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-between"><div className="flex items-center gap-3 overflow-hidden"><FileTextIcon className="text-emerald-600" /><p className="text-[10px] font-black uppercase text-emerald-600 dark:text-white truncate">{selectedEvent.fileName || t.attachedFile}</p></div><button onClick={() => handleDownloadFile(selectedEvent.fileData!, selectedEvent.fileName || 'file')} className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center active:scale-90 transition-all shadow-md"><Download className="w-5 h-5" /></button></div>)}<button onClick={handleUpdateReminder} className={`w-full py-5 rounded-[2rem] ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'bg-indigo-600' : detailModalStyles.saveBtn} text-white font-black uppercase text-[15.6px] tracking-widest shadow-xl active:scale-95 flex items-center justify-center gap-3`}><Save className="w-6.5 h-6.5" strokeWidth={1.5} /> {t.save}</button></div>
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex flex-col w-full">
+                <div className="flex items-center gap-4 mb-2">
+                  <div className={selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text}>
+                    {selectedEvent.category === CategoryType.NOTES ? ( <StickyNote className="w-12 h-12" strokeWidth={1.5} /> ) : ( React.cloneElement((selectedEvent.category === CategoryType.BIRTHDAYS ? CATEGORY_DETAILS[selectedEvent.category].icon : (SUB_CATEGORY_DETAILS[selectedEvent.subCategory]?.icon || CATEGORY_DETAILS[selectedEvent.category].icon)) as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 }) )}
+                  </div>
+                  <h2 className={`text-[26.5px] font-black uppercase leading-tight ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text}`}>{selectedEvent.category === CategoryType.BIRTHDAYS ? t.birthdays : selectedEvent.category === CategoryType.NOTES ? t.notes : (selectedEvent.subCategory ? (t as any)[SUB_CATEGORY_DETAILS[selectedEvent.subCategory].labelKey] : (t as any)[selectedEvent.category.toLowerCase()])}</h2>
+                </div>
+                <h2 className={`text-[26.5px] font-black uppercase leading-tight mb-2 mt-6 ${selectedEvent.category === CategoryType.NOTES ? detailModalStyles.text : 'text-slate-700 dark:text-white'}`}>{selectedEvent.title}</h2>
+              </div>
+              <button onClick={() => { setIsDetailModalOpen(false); setIsPlaying(false); if (audioPreviewRef.current) { audioPreviewRef.current.pause(); audioPreviewRef.current = null; } }} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-700 dark:text-white"/></button>
+            </div>
+            <div className="space-y-6 pb-12">
+              <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700">
+                <p className={`text-[9px] font-black uppercase tracking-widest mb-2 ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-500' : detailModalStyles.label}`}>{t.date}</p>
+                <p className={`font-bold text-[23.6px] uppercase ${selectedEvent.category === CategoryType.NOTES ? detailModalStyles.text : 'text-slate-700 dark:text-white'}`}>{new Date(selectedEvent.date).toLocaleDateString(state.language, { day: 'numeric', month: 'long', year: selectedEvent.repeatYearly ? undefined : 'numeric' })} {selectedEvent.time ? `- ${formatTimeTo12h(selectedEvent.time)}` : ''}</p>
+              </div>
+
+              {selectedEvent.notes && (
+                <div className="p-6 rounded-[2.2rem] bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700">
+                  <p className={`text-[9px] font-black uppercase tracking-widest mb-3 opacity-60 ${detailModalStyles.text}`}>{t.notes}</p>
+                  <p className={`text-[26px] font-medium leading-relaxed whitespace-pre-wrap ${selectedEvent.category === CategoryType.NOTES ? detailModalStyles.text : 'text-slate-700 dark:text-white'}`}>{selectedEvent.notes}</p>
+                </div>
+              )}
+
+              {selectedEvent.category !== CategoryType.NOTES && (
+                <div style={modalBgStyle} className={`p-6 rounded-[2.2rem] border relative shadow-sm`}>
+                  <Edit2 className={`absolute top-4 right-4 w-3 h-3 ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text} opacity-60`} strokeWidth={1.5} />
+                  <label className={`text-[13.2px] font-black uppercase tracking-widest text-center block mb-4 italic ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text}`}>{t.howMuchAdvance}</label>
+                  <div className="flex items-center justify-between mb-3"><div className={`flex items-center gap-2 ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'text-indigo-600' : detailModalStyles.text}`}><span className="text-sm font-black uppercase">{t.alertPrefix} {getAdvanceLabel(selectedEvent.category, detailNotifyValue)} {(selectedEvent.category === CategoryType.APPOINTMENTS || detailNotifyValue !== 0) ? t.beforeSuffix : ''}</span></div></div>
+                  <input type="range" min="0" max={selectedEvent.category === CategoryType.APPOINTMENTS ? "55" : (selectedEvent.category === CategoryType.DOCUMENTS ? "90" : "60")} step="1" value={detailNotifyValue} onChange={(e) => setDetailNotifyValue(parseInt(e.target.value))} className={`w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'accent-indigo-600' : detailModalStyles.accent}`} />
+                </div>
+              )}
+
+              {selectedEvent.audioData && (
+                <div className="p-5 rounded-[2rem] bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between">
+                   <div className="flex items-center gap-3"><Volume2 className="text-indigo-600" /><p className="text-[10px] font-black uppercase text-indigo-600 dark:text-white">{t.audioNote}</p></div>
+                   <button onClick={() => {
+                     if (!audioPreviewRef.current) { audioPreviewRef.current = new Audio(selectedEvent.audioData); audioPreviewRef.current.onended = () => setIsPlaying(false); }
+                     if (isPlaying) { audioPreviewRef.current.pause(); setIsPlaying(false); }
+                     else { audioPreviewRef.current.play(); setIsPlaying(true); }
+                   }} className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center active:scale-90 transition-all">{isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}</button>
+                </div>
+              )}
+              {selectedEvent.fileData && (
+                <div className="p-5 rounded-[2rem] bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-between">
+                   <div className="flex items-center gap-3 overflow-hidden"><FileTextIcon className="text-emerald-600" /><p className="text-[10px] font-black uppercase text-emerald-600 dark:text-white truncate">{selectedEvent.fileName || t.attachedFile}</p></div>
+                   <button onClick={() => handleDownloadFile(selectedEvent.fileData!, selectedEvent.fileName || 'file')} className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center active:scale-90 transition-all shadow-md"><Download className="w-5 h-5" /></button>
+                </div>
+              )}
+              <button onClick={handleUpdateReminder} className={`w-full py-5 rounded-[2rem] ${selectedEvent.category === CategoryType.BIRTHDAYS ? 'bg-indigo-600' : detailModalStyles.saveBtn} text-white font-black uppercase text-[15.6px] tracking-widest shadow-xl active:scale-95 flex items-center justify-center gap-3`}><Save className="w-6.5 h-6.5" strokeWidth={1.5} /> {t.save}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isInfoModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1000] flex items-center justify-center p-8">
+          <div style={modalBgStyle} className={`w-full max-sm rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 ${state.theme === 'dark' ? 'text-white' : 'text-slate-700'} shadow-2xl`}>
+            <div className="w-18 h-18 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner"><Info className="w-10 h-10" strokeWidth={1.5} /></div>
+            <h3 className="text-xl font-black mb-4 uppercase tracking-tighter italic">{t.appName}</h3>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">{t.version}: 1.0.0 (Production Build)</p>
+            <div className="space-y-4">
+              <button onClick={() => { setIsInfoModalOpen(false); setOnboardingStep('carousel'); setCarouselIndex(0); }} className="w-full py-5 rounded-[1.8rem] bg-emerald-600 text-white font-black text-sm uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-3"><Play className="w-4 h-4 fill-white" /> {t.seeTutorial}</button>
+              <button onClick={() => setIsInfoModalOpen(false)} className="w-full py-5 rounded-[1.8rem] bg-indigo-600 text-white font-black text-sm uppercase tracking-widest transition-all shadow-lg">{t.thanks}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isNotifTimeModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1000] flex items-center justify-center p-8">
+          <div style={modalBgStyle} className={`w-full max-w-sm rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 ${state.theme === 'dark' ? 'text-white' : 'text-slate-700'} shadow-2xl`}>
+            <div className="flex justify-between items-start mb-6">
+              <div className="text-left"><h3 className="text-xl font-black uppercase tracking-tighter italic">{t.generalNotifTime}</h3><p className="text-[9px] font-bold text-slate-400 mt-1 uppercase leading-tight">{t.generalNotifTimeDesc}</p></div>
+              <button onClick={() => setIsNotifTimeModalOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-700 rounded-full"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="py-6 flex flex-col items-center gap-6">
+              <div className="grid grid-cols-[1fr_1fr_1fr] gap-3 w-full">
+                <select value={notifHour} onChange={(e) => setNotifHour(e.target.value)} className={`w-full p-5 rounded-3xl font-black outline-none border text-center ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>{Array.from({length: 12}, (_, i) => String(i === 0 ? 12 : i).padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}</select>
+                <select value={notifMin} onChange={(e) => setNotifMin(e.target.value)} className={`w-full p-5 rounded-3xl font-black outline-none border text-center ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`}>{Array.from({length: 60}, (_, i) => String(i).padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}</select>
+                <button type="button" onClick={() => setNotifAmPm(prev => prev === 'AM' ? 'PM' : 'AM')} className={`w-full p-5 rounded-3xl font-black outline-none border transition-all ${notifAmPm === 'AM' ? 'bg-emerald-500 text-white border-emerald-600 shadow-md' : 'bg-indigo-600 text-white border-indigo-700 shadow-md'}`}>{notifAmPm}</button>
+              </div>
+            </div>
+            <button onClick={handleSaveNotifTime} className="w-full py-5 rounded-[1.8rem] bg-indigo-600 text-white font-black text-sm uppercase tracking-widest transition-all shadow-lg mt-4 flex items-center justify-center gap-3"><Save className="w-4 h-4" strokeWidth={1.5} /> {t.save}</button>
+          </div>
+        </div>
+      )}
+
+      {isLangModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1000] flex items-center justify-center p-8">
+          <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 ${state.theme === 'dark' ? 'text-white' : 'text-slate-700'} shadow-2xl`}>
+            <div className="w-18 h-18 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner"><Globe className="w-10 h-10" strokeWidth={1.5} /></div>
+            <h3 className="text-xl font-black mb-8 uppercase tracking-tighter italic">{t.selectLanguage}</h3>
+            <div className="space-y-4">
+              {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
+                <button key={code} onClick={() => { setState(p => ({ ...p, language: code as LanguageCode })); setIsLangModalOpen(false); }} className={`w-full py-5 rounded-[1.8rem] font-black text-sm uppercase tracking-widest transition-all ${state.language === code ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>{name}</button>
+              ))}
+            </div>
+            <button onClick={() => setIsLangModalOpen(false)} className="mt-6 font-black text-[10px] uppercase text-slate-400">{t.no}</button>
+          </div>
+        </div>
+      )}
+
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[650] flex items-end justify-center">
+          <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[95vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
+            <div className="flex justify-between items-start mb-8">
+              <div><h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{t.myAccount}</h2><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 italic">{t.manageData}</p></div>
+              <button onClick={() => setIsProfileModalOpen(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full transition-transform active:scale-75 shadow-sm"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button>
+            </div>
+            <div className={`p-6 rounded-[2.5rem] mb-6 border flex flex-col items-center gap-4 transition-all ${isGoogleLoggedIn ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+              {!isGoogleLoggedIn ? (
+                <><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center px-4">{t.secureDates}</p><button onClick={() => { if(!state.isPro) setIsPaywallOpen(true); else handleGoogleLogin(); }} className="w-full bg-white text-slate-600 border border-slate-200 py-4 rounded-[1.8rem] font-bold text-sm flex items-center justify-center gap-3 shadow-sm active:scale-95 transition-all">{!state.isPro && <Crown className="w-4 h-4 text-amber-500" strokeWidth={1.5} />}<img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />{t.googleLogin}</button></>
+              ) : (
+                <div className="flex items-center gap-4 w-full"><div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black">{state.user.name.substring(0,2).toUpperCase()}</div><div className="flex-1"><p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">{t.syncActive}</p><p className="text-xs font-bold truncate">{state.user.name}</p></div><CheckCircle2 className="w-6 h-6 text-emerald-500" strokeWidth={1.5} /></div>
+              )}
+            </div>
+            <div className={`p-6 rounded-[2.5rem] mb-6 border ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-100 shadow-sm'} space-y-4`}>
+              <div className="flex items-center justify-between"><div className="flex items-center gap-3"><Camera className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase">{t.profilePhoto}</span></div><button onClick={() => setState(p => ({...p, user: {...p.user, showProfileImage: !p.user.showProfileImage}}))} className={`w-12 h-6 rounded-full relative transition-all ${state.user.showProfileImage ? 'bg-indigo-600' : 'bg-slate-300'} flex items-center`}><div className={`absolute w-4 h-4 rounded-full bg-white shadow-md transition-all ${state.user.showProfileImage ? 'right-1' : 'left-1'}`} /></button></div>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200">{state.user.profileImage ? <img src={state.user.profileImage} alt="Preview" className="w-full h-full object-cover" /> : <UserIcon className="text-slate-400 w-6 h-6" />}</div><button onClick={() => fileInputRef.current?.click()} className="flex-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-white py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center gap-2 active:scale-95 transition-all"><Upload className="w-3 h-3" /> {t.uploadPhoto}</button><input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" /></div>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight leading-relaxed">{t.photoResolutionNote}</p>
+              </div>
+            </div>
+            <div className={`p-6 rounded-[2.5rem] mb-6 border ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-100 shadow-sm'} space-y-4`}>
+               <div className="flex items-center justify-between"><div className="flex items-center gap-3"><Award className="text-amber-500 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase">{t.currentPlan}</span></div><span className={`text-[10px] font-black px-3 py-1 rounded-full ${state.isPro ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>{state.isPro ? t.goldPlan : t.freePlan}</span></div>
+               {state.isPro && (<div className="pt-2 border-t border-slate-200 dark:border-slate-600 space-y-2"><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.purchaseDate}</p><p className="text-xs font-bold">{state.user.purchaseDate || 'N/A'}</p></div>)}
+               {!state.isPro && (<button onClick={() => { setIsProfileModalOpen(false); setIsPaywallOpen(true); }} className="w-full bg-amber-500 text-white py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"><Zap className="w-3 h-3 fill-white" /> {t.upgradeToGold}</button>)}
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); setState(prev => ({ ...prev, user: { ...prev.user, name: fd.get('name') as string, email: fd.get('email') as string, dateOfBirth: fd.get('dob') as string } })); setIsProfileModalOpen(false); }} className="space-y-6 pb-12">
+              <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.title}</label><input required name="name" defaultValue={state.user.name} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border transition-all ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white focus:border-indigo-500` : `bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-300`}`} /></div>
+              <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Email</label><input required name="email" defaultValue={state.user.email} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border transition-all ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white focus:border-indigo-500` : `bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-300`}`} /></div>
+              <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.birthdays}</label><input required name="dob" type="date" defaultValue={state.user.dateOfBirth} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border transition-all ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white focus:border-indigo-500` : `bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-300`}`} /></div>
+              <button type="submit" className="w-full bg-indigo-600 text-white py-6 rounded-[2.5rem] font-black uppercase tracking-[0.2em] shadow-2xl mt-6 active:scale-95 transition-all flex items-center justify-center gap-3"><Save className="w-5 h-5" strokeWidth={1.5} /> {t.saveChanges}</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isEmailAlertConfirmOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1100] flex items-center justify-center p-8">
+          <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl`}>
+            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><Mail className="w-8 h-8" /></div>
+            <h3 className="text-sm font-black mb-4 uppercase tracking-tighter">{t.emailConfirmTitle}</h3>
+            <p className="text-[10px] font-bold text-slate-400 mb-8 leading-relaxed">{t.emailConfirmText}</p>
+            <div className="grid grid-cols-2 gap-4"><button onClick={() => setIsEmailAlertConfirmOpen(false)} className="py-5 rounded-[1.8rem] bg-slate-100 dark:bg-slate-700 font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white shadow-sm">{t.no}</button><button onClick={() => { setState(p => ({...p, globalSettings: {...p.globalSettings, reminderMethod: 'mail'}})); setIsEmailAlertConfirmOpen(false); }} className="py-5 rounded-[1.8rem] bg-indigo-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl">{t.yes}</button></div>
+          </div>
+        </div>
+      )}
+
+      {isAutoDeleteConfirmOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1100] flex items-center justify-center p-8">
+          <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl`}>
+            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><Trash2 className="w-8 h-8" /></div>
+            <h3 className="text-sm font-black mb-10 uppercase tracking-tighter">{t.autoDeleteConfirm}</h3>
+            <div className="grid grid-cols-2 gap-4"><button onClick={() => setIsAutoDeleteConfirmOpen(false)} className="py-5 rounded-[1.8rem] bg-slate-100 dark:bg-slate-700 font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white shadow-sm">{t.no}</button><button onClick={confirmAutoDeleteEnable} className="py-5 rounded-[1.8rem] bg-indigo-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl">{t.yes}</button></div>
+          </div>
+        </div>
+      )}
+
+      {isContactConfirmOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1100] flex items-center justify-center p-8">
+          <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl`}>
+            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><UsersIcon className="w-8 h-8" /></div>
+            <h3 className="text-sm font-black mb-10 uppercase tracking-tighter leading-relaxed">{t.importContactsConfirm}</h3>
+            <div className="grid grid-cols-2 gap-4">{isImporting ? <div className="col-span-2 py-5 flex items-center justify-center gap-3"><Loader2 className="animate-spin text-indigo-600" /> <p className="text-[10px] font-black uppercase">{t.syncing}</p></div> : <><button onClick={() => setIsContactConfirmOpen(false)} className="py-5 rounded-[1.8rem] bg-slate-100 dark:bg-slate-700 font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white shadow-sm">{t.no}</button><button onClick={handleImportContacts} className="py-5 rounded-[1.8rem] bg-indigo-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl">{t.yes}</button></>}</div>
+          </div>
+        </div>
+      )}
+
+      {isNoContactBirthdaysAlertOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1300] flex items-center justify-center p-8">
+          <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl`}>
+            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><AlertCircle className="w-8 h-8" /></div>
+            <h3 className="text-sm font-black mb-6 uppercase tracking-tighter">{state.language === 'es' ? 'AVISO' : 'NOTICE'}</h3>
+            <p className="text-[11px] font-bold text-slate-400 mb-8 leading-relaxed">{t.noContactBirthdays}</p>
+            <button onClick={() => setIsNoContactBirthdaysAlertOpen(false)} className="w-full py-5 rounded-[1.8rem] bg-indigo-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl">{t.thanks}</button>
+          </div>
+        </div>
+      )}
+
+      {isDirectModeConfirmOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1100] flex items-center justify-center p-8">
+          <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl`}>
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><Zap className="w-8 h-8" /></div>
+            <h3 className="text-sm font-black mb-10 uppercase tracking-tighter leading-relaxed">{state.language === 'es' ? '¿ACTIVAR MODO DIRECTO PARA AÑADIR RECORDATORIOS RÁPIDAMENTE?' : 'ENABLE DIRECT MODE TO ADD REMINDERS QUICKLY?'}</h3>
+            <div className="grid grid-cols-2 gap-4"><button onClick={() => setIsDirectModeConfirmOpen(false)} className="py-5 rounded-[1.8rem] bg-slate-100 dark:bg-slate-700 font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white shadow-sm">{t.no}</button><button onClick={() => { setState(p => ({...p, isPro: true})); setIsDirectAddMode(true); setIsDirectModeConfirmOpen(false); }} className="py-5 rounded-[1.8rem] bg-emerald-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl">{t.yes}</button></div>
+          </div>
+        </div>
+      )}
+
+      {isShareModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[750] flex items-end justify-center">
+          <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[92vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
+            <div className="flex justify-between items-start mb-6">
+              <div><h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{t.askFriends}</h2><p className="text-[11px] font-bold uppercase tracking-tight mt-3 leading-relaxed">{t.askFriendsSub}</p></div>
+              <button onClick={() => setIsShareModalOpen(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button>
+            </div>
+            <div className="space-y-6 pb-12">
+              <div className={`p-6 rounded-[2.2rem] border transition-all ${state.theme === 'dark' ? 'bg-violet-900/20 border-violet-500/30' : 'bg-violet-50 border-violet-100 shadow-sm'}`}>
+                 <label className="text-[10px] font-black text-violet-500 uppercase tracking-widest mb-2 block">{t.yourBirthday}</label>
+                 <div className="flex items-center gap-4">
+                   <input type="date" value={state.user.dateOfBirth} onChange={(e) => setState(p => ({...p, user: {...p.user, dateOfBirth: e.target.value}}))} className={`flex-1 p-4 rounded-2xl font-bold bg-white dark:bg-slate-800 border dark:border-slate-700 outline-none focus:border-violet-400 text-black`} /><div className="p-4 rounded-2xl bg-violet-600 text-white shadow-md"><CheckCircle2 className="w-5 h-5" /></div>
+                 </div>
+              </div>
+              <div className={`p-6 rounded-[2rem] border transition-all ${state.theme === 'dark' ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50 border-indigo-100'}`}>
+                <p className={`text-[16.8px] font-medium leading-relaxed mb-4 italic whitespace-pre-line break-words ${state.theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>"{SHARE_MESSAGE_CUMPLEAÑOS(state.language, state.user.dateOfBirth || '')}"</p>
+                <button 
+                  onClick={() => { 
+                    navigator.clipboard.writeText(SHARE_MESSAGE_CUMPLEAÑOS(state.language, state.user.dateOfBirth || '')); 
+                    alert(t.copiedToClipboard); 
+                  }} 
+                  className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
+                >
+                  <Copy className="w-4 h-4" strokeWidth={1.5} /> {t.copyText}
+                </button>
+                
+                <div className="grid grid-cols-1 gap-4 mt-6">
+                  <button onClick={() => { setBirthDay('01'); setBirthMonth('01'); setIsManualAddModalOpen(true); }} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
+                    <Plus className="w-4 h-4" strokeWidth={2.5} /> {t.addManually}
+                  </button>
+                  <button onClick={handleImportGoogleCalendar} className="w-full py-4 bg-white dark:bg-slate-700 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-500/30 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
+                    <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" /> {t.importGoogleCalendar}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isManualAddModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[800] flex items-end justify-center">
+          <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[92vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
+            <div className="flex justify-between items-start mb-6">
+              <div><h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{t.manualAddTitle}</h2><p className="text-[11px] font-bold uppercase tracking-tight mt-2 text-slate-400">{t.manualAddSub}</p></div>
+              <button onClick={() => setIsManualAddModalOpen(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button>
+            </div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              const newItem: ReminderDate = {
+                id: Math.random().toString(36).substring(2),
+                title: fd.get('name') as string,
+                date: `2000-${birthMonth}-${birthDay}`,
+                category: CategoryType.BIRTHDAYS,
+                subCategory: 'AMIGOS',
+                reminderFrequency: 'one-time',
+                notifyDaysBefore: [1],
+                repeatYearly: true
+              };
+              setState(p => ({ ...p, dates: [...p.dates, newItem] }));
+              setIsManualAddModalOpen(false);
+              setIsShareModalOpen(false);
+            }} className="space-y-6 pb-12">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest px-1 text-indigo-600">{t.title}</label>
+                <input required name="name" placeholder={t.namePlaceholder} className={`w-full p-6 rounded-[2.2rem] font-bold text-[18.5px] outline-none border transition-all ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white focus:border-indigo-400` : `bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-300`}`} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest px-1 text-indigo-600">{t.dateOfBirth}</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <select value={birthDay} onChange={(e) => setBirthDay(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white focus:border-indigo-400` : `bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-300`}`}>
+                    {Array.from({length: 31}, (_, i) => String(i + 1).padStart(2, '0')).map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                  <select value={birthMonth} onChange={(e) => setBirthMonth(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white focus:border-indigo-400` : `bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-300`}`}>
+                    {Array.from({length: 12}, (_, i) => {
+                       const m = String(i + 1).padStart(2, '0');
+                       const label = new Date(2000, i, 1).toLocaleString(state.language, { month: 'long' });
+                       return <option key={m} value={m}>{label.toUpperCase()}</option>
+                    })}
+                  </select>
+                </div>
+              </div>
+              <button type="submit" className="w-full bg-indigo-600 text-white py-6 rounded-[2.5rem] font-black uppercase tracking-[0.2em] shadow-2xl mt-6 active:scale-95 transition-all flex items-center justify-center gap-3">
+                <Save className="w-5 h-5" strokeWidth={1.5} /> {t.save}
+              </button>
+            </form>
           </div>
         </div>
       )}
@@ -1189,26 +1581,85 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {isNoContactBirthdaysAlertOpen && (
+      {isExpenseModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[550] flex items-end justify-center">
+          <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[90vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
+            <div className="flex justify-between items-start mb-8"><h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{t.dailyExpenses}</h2><button onClick={() => setIsModalOpenExpense(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button></div>
+            <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); const amountVal = parseFloat(fd.get('amount') as string); if (isNaN(amountVal)) return; const exp: Expense = { id: Math.random().toString(36).substring(2), amount: amountVal, category: fd.get('category') as ExpenseCategory, date: fd.get('date') as string, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), note: fd.get('note') as string, fileData: expensePhotoBase64 || undefined }; setState(p => ({...p, expenses: [...p.expenses, exp]})); setIsModalOpenExpense(false); setExpensePhotoBase64(null); }} className="space-y-6 pb-12">
+              <div className="grid grid-cols-[1.6fr_1fr] gap-4">
+                <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.amount}</label><input required name="amount" type="number" step="0.01" className={`w-full p-8 rounded-[2.5rem] font-bold text-[22px] outline-none border transition-all ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600 focus:border-violet-500 text-white' : 'bg-slate-50 border-slate-100 focus:border-violet-300 text-slate-900'}`} /></div>
+                <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.currencyLabel}</label><input required defaultValue={state.user.currency} onChange={(e) => setState(p => ({...p, user: {...p.user, currency: e.target.value}}))} className={`w-full p-8 rounded-[2.5rem] font-bold text-[22px] outline-none border text-center ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600 focus:border-violet-500 text-white' : 'bg-slate-50 border-slate-100 focus:border-violet-300 text-slate-900'}`} /></div>
+              </div>
+              <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.category}</label><select name="category" className={`w-full p-6 rounded-[2.2rem] font-black text-[120%] outline-none border appearance-none ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-100 text-slate-900'}`}>{Object.keys(t.expenseCategories).map(catKey => <option key={catKey} value={catKey}>{t.expenseCategories[catKey].toUpperCase()}</option>)}</select></div>
+              <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.date}</label><input required name="date" type="date" defaultValue={formatDateForInput(new Date())} className={`w-full p-6 rounded-[2.2rem] font-black text-[120%] outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white` : `bg-slate-50 border-slate-100 text-slate-900`}`} /></div>
+              <div className={`p-4 rounded-3xl border flex flex-col items-center justify-center gap-2 ${state.theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-100'}`}>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[10.4px] font-black text-slate-400 uppercase">{state.language === 'es' ? 'FOTO DEL GASTO' : 'EXPENSE PHOTO'}</p>
+                  {!state.isPro && <Crown className="w-2.5 h-2.5 text-amber-500" strokeWidth={1.5} />}
+                </div>
+                {expensePhotoBase64 ? (
+                  <div className="flex items-center gap-2"><img src={expensePhotoBase64} className="w-10 h-10 object-cover rounded-lg border border-indigo-200" /><button type="button" onClick={() => setExpensePhotoBase64(null)} className="text-rose-500 p-1"><X className="w-4 h-4" /></button></div>
+                ) : (
+                  <button type="button" onClick={() => { if(!state.isPro) setIsPaywallOpen(true); else expenseFileInputRef.current?.click(); }} className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-95 shadow-md"><Camera className="w-5 h-5" /></button>
+                )}
+                <input type="file" ref={expenseFileInputRef} onChange={handleExpensePhotoUpload} accept="image/*" capture="environment" className="hidden" />
+              </div>
+              <div className="space-y-4 pt-4">
+                <button type="submit" className="w-full bg-violet-950 text-white py-[30px] rounded-[2.5rem] font-black uppercase tracking-[0.2em] shadow-2xl mt-4 active:scale-95 transition-all text-[15px] flex items-center justify-center gap-3"><Save className="w-6 h-6" strokeWidth={1.5} /> {t.save}</button>
+                <button type="button" onClick={() => { if(!state.isPro) setIsPaywallOpen(true); else { setIsModalOpenExpense(false); setIsViewExpensesModalOpen(true); } }} className="w-full bg-violet-950 text-white py-[20px] rounded-[2.5rem] font-black uppercase tracking-[0.1em] shadow-xl active:scale-95 transition-all text-[12px] flex items-center justify-center gap-3">{!state.isPro && <Crown className="w-3 h-3 text-amber-500" />} {t.viewMyExpenses}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isViewExpensesModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[560] flex items-end justify-center">
+           <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom h-[90vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
+             <div className="flex justify-between items-start mb-8"><h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{t.expensesOf} {getMonthlyExpenses.monthName}</h2><button onClick={() => setIsViewExpensesModalOpen(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button></div>
+             <div className="bg-indigo-600 rounded-[2.5rem] p-8 mb-8 text-white shadow-xl flex flex-col items-center gap-2"><p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">{t.totalMonthly}</p><h2 className="text-[44.5px] font-black leading-none">{getMonthlyExpenses.total.toFixed(2)} {state.user.currency}</h2></div>
+             <div className="space-y-4 pb-12">
+               {(Object.entries(getMonthlyExpenses.grouped) as [string, { total: number, items: Expense[] }][]).map(([catKey, data]) => {
+                 const isExpanded = expandedExpenseCat === catKey;
+                 return (
+                   <div key={catKey} className={`rounded-[2.2rem] border transition-all overflow-hidden ${state.theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+                     <button onClick={() => setExpandedExpenseCat(isExpanded ? null : catKey)} className="w-full p-6 flex items-center justify-between active:bg-slate-50 dark:active:bg-slate-700/50 transition-colors">
+                       <div className="flex items-center gap-3"><PieChart className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="font-black text-sm uppercase">{t.expenseCategories[catKey].toUpperCase()}</span></div>
+                       <div className="flex items-center gap-3"><span className="font-black text-indigo-600">{data.total.toFixed(2)} {state.user.currency}</span>{isExpanded ? <ChevronUp className="w-4 h-4 text-slate-500 dark:text-white" /> : <ChevronDown className="w-4 h-4 text-slate-500 dark:text-white" />}</div>
+                     </button>
+                     {isExpanded && (
+                       <div className="px-6 pb-6 pt-2 space-y-3 animate-in slide-in-from-top duration-300">
+                         {data.items.map(item => (
+                           <div key={item.id} className="flex items-center justify-between py-3 border-t border-slate-50 dark:border-slate-700">
+                             <div><p className="text-[10px] font-black uppercase text-slate-400">{new Date(item.date).toLocaleDateString(state.language, { day: '2-digit', month: '2-digit' })} • {item.time}</p><p className="text-sm font-bold">{item.amount.toFixed(2)} {state.user.currency}</p></div>
+                             <div className="flex items-center gap-2">{item.fileData && (<button onClick={() => handleDownloadFile(item.fileData!, 'expense_photo')} className="p-2 text-indigo-600 active:scale-75 transition-all"><ImageIcon className="w-4 h-4" strokeWidth={1.5} /></button>)}<button onClick={() => setIsDeleteExpenseConfirmOpen(item.id)} className="p-2 text-rose-500 active:scale-75 transition-all"><Trash2 className="w-4 h-4" strokeWidth={1.5} /></button></div>
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                   </div>
+                 );
+               })}
+             </div>
+             <button onClick={() => setIsExportModalOpen(true)} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white py-5 rounded-[2rem] font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all mb-20"><Download className="w-4 h-4" /> {t.exportExpenses}</button>
+           </div>
+        </div>
+      )}
+
+      {isExportModalOpen && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1300] flex items-center justify-center p-8">
           <div style={modalBgStyle} className={`w-full max-w-xs rounded-[3.5rem] p-9 text-center animate-in zoom-in duration-300 shadow-2xl`}>
-            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><AlertCircle className="w-8 h-8" /></div>
-            <h3 className="text-sm font-black mb-6 uppercase tracking-tighter">{state.language === 'es' ? 'AVISO' : 'NOTICE'}</h3>
-            <p className="text-[11px] font-bold text-slate-400 mb-8 leading-relaxed">{t.noContactBirthdays}</p>
-            <button onClick={() => setIsNoContactBirthdaysAlertOpen(false)} className="w-full py-5 rounded-[1.8rem] bg-indigo-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl">{t.thanks}</button>
+             <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><Download className="w-8 h-8" /></div>
+             <h3 className="text-sm font-black mb-8 uppercase tracking-tighter">{t.selectFormat}</h3>
+             <div className="space-y-3">
+               <button onClick={() => handleExport('csv')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3"><FileSpreadsheet className="w-4 h-4 text-emerald-500" /> {t.excelFormat}</button>
+               <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3"><FileTextIcon className="w-4 h-4 text-rose-500" /> {t.pdfFormat}</button>
+               <button onClick={() => handleExport('txt')} className="w-full py-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 font-bold text-xs flex items-center justify-center gap-3"><FileCode className="w-4 h-4 text-slate-500" /> {t.textFormat}</button>
+             </div>
+             <button onClick={() => setIsExportModalOpen(false)} className="mt-8 font-black text-[10px] uppercase text-slate-400">{t.no}</button>
           </div>
         </div>
       )}
-
-      {isManualAddModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[800] flex items-end justify-center">
-          <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[92vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
-            <div className="flex justify-between items-start mb-6"><div><h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{t.manualAddTitle}</h2><p className="text-[11px] font-bold uppercase tracking-tight mt-2 text-slate-400">{t.manualAddSub}</p></div><button onClick={() => setIsManualAddModalOpen(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button></div>
-            <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); const newItem: ReminderDate = { id: Math.random().toString(36).substring(2), title: fd.get('name') as string, date: `2000-${birthMonth}-${birthDay}`, category: CategoryType.BIRTHDAYS, subCategory: 'AMIGOS', reminderFrequency: 'one-time', notifyDaysBefore: [1], repeatYearly: true }; setState(p => ({ ...p, dates: [...p.dates, newItem] })); setIsManualAddModalOpen(false); setIsShareModalOpen(false); }} className="space-y-6 pb-12"><div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-widest px-1 text-indigo-600">{t.title}</label><input required name="name" placeholder={t.namePlaceholder} className={`w-full p-6 rounded-[2.2rem] font-bold text-[18.5px] outline-none border transition-all ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white focus:border-indigo-400` : `bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-300`}`} /></div><div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-widest px-1 text-indigo-600">{t.dateOfBirth}</label><div className="grid grid-cols-2 gap-4"><select value={birthDay} onChange={(e) => setBirthDay(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white focus:border-indigo-400` : `bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-300`}`}>{Array.from({length: 31}, (_, i) => String(i + 1).padStart(2, '0')).map(d => <option key={d} value={d}>{d}</option>)}</select><select value={birthMonth} onChange={(e) => setBirthMonth(e.target.value)} className={`w-full p-6 rounded-[2.2rem] font-bold outline-none border ${state.theme === 'dark' ? `bg-slate-700 border-slate-600 text-white focus:border-indigo-400` : `bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-300`}`}>{Array.from({length: 12}, (_, i) => { const m = String(i + 1).padStart(2, '0'); const label = new Date(2000, i, 1).toLocaleString(state.language, { month: 'long' }); return <option key={m} value={m}>{label.toUpperCase()}</option> })}</select></div></div><button type="submit" className="w-full bg-indigo-600 text-white py-6 rounded-[2.5rem] font-black uppercase tracking-[0.2em] shadow-2xl mt-6 active:scale-95 transition-all flex items-center justify-center gap-3"><Save className="w-5 h-5" strokeWidth={1.5} /> {t.save}</button></form>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };
