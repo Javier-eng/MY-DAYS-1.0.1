@@ -17,7 +17,6 @@ const SHARED_GLOW_EFFECT = "shadow-[0_0_40px_-5px_rgba(255,255,255,0.22),0_0_15p
 const APP_URL = "https://play.google.com/store/apps/details?id=com.mydays&myexpenses.app"; 
 const GITHUB_WALLPAPER_URL = "https://raw.githubusercontent.com/Javier-eng/MYDAYSPICS/refs/heads/main/DESK2.png";
 
-// Extend translations with new required keys
 const EXTENDED_TRANSLATIONS = {
   ...TRANSLATIONS,
   en: {
@@ -28,7 +27,9 @@ const EXTENDED_TRANSLATIONS = {
     manualAddTitle: 'ADD BIRTHDAY',
     manualAddSub: 'Enter the details of the birthday to save',
     namePlaceholder: 'Friend\'s Name',
-    dateOfBirth: 'DATE OF BIRTH'
+    dateOfBirth: 'DATE OF BIRTH',
+    activateNotifications: 'ACTIVATE NOTIFICATIONS',
+    notifStatus: 'Status: Push alerts enabled'
   },
   es: {
     ...TRANSLATIONS.es,
@@ -38,7 +39,9 @@ const EXTENDED_TRANSLATIONS = {
     manualAddTitle: 'AÑADIR CUMPLEAÑOS',
     manualAddSub: 'Introduce los datos del cumpleaños para guardarlo',
     namePlaceholder: 'Nombre del Amigo/a',
-    dateOfBirth: 'FECHA DE NACIMIENTO'
+    dateOfBirth: 'FECHA DE NACIMIENTO',
+    activateNotifications: 'ACTIVAR NOTIFICACIONES',
+    notifStatus: 'Estado: Alertas Push activadas'
   }
 };
 
@@ -119,6 +122,22 @@ const App: React.FC = () => {
     return localStorage.getItem('vitaldates_onboarding_v1') ? 'hidden' : 'splash';
   });
   const [carouselIndex, setCarouselIndex] = useState(0);
+
+  // Funciones de Notificaciones para App Store
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      alert(state.language === 'es' ? "Este navegador no soporta notificaciones de escritorio" : "This browser does not support desktop notifications");
+      return;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        alert(state.language === 'es' ? "¡Permiso concedido! Recibirás alertas importantes." : "Permission granted! You will receive important alerts.");
+      }
+    } catch (error) {
+      console.error("Error requesting notifications:", error);
+    }
+  };
 
   const onboardingImages = browserLang === 'es' ? [
     "https://raw.githubusercontent.com/Javier-eng/MYDAYSPICS/refs/heads/main/C2.png",
@@ -985,9 +1004,25 @@ const App: React.FC = () => {
                    setNotifMin(m);
                    setNotifAmPm(ampm);
                    setIsNotifTimeModalOpen(true);
-               }}><div className="flex items-center gap-3"><Clock className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{t.generalNotifTime}</span></div><span className="text-[11px] font-black text-indigo-600 dark:text-white uppercase">{formatTimeTo12h(state.globalSettings.defaultNotificationTime)}</span></div><div className="flex items-center justify-between cursor-pointer" onClick={() => setIsInfoModalOpen(true)}><div className="flex items-center gap-3"><Info className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{t.info}</span></div><ChevronRight className="w-4 h-4 text-slate-300" strokeWidth={1.5} /></div></div><div className={`rounded-[2.5rem] p-6 border ${state.theme === 'dark' ? (state.user.wallpaper ? 'bg-slate-800/70 backdrop-blur-md border-slate-700' : 'bg-slate-800 border-slate-700') : (state.user.wallpaper ? 'bg-white/70 border-slate-100 backdrop-blur-md' : 'bg-white border-slate-100 shadow-sm')} space-y-6 shadow-sm`}><div className="flex items-center justify-between"><div className="flex items-center gap-3"><ImageIcon className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{state.language === 'es' ? 'FONDO DE PANTALLA' : 'WALLPAPER'}</span>{!state.isPro && <Crown className="w-3.5 h-3.5 text-amber-500" strokeWidth={1.5} />}</div><div className="flex items-center gap-2">{state.user.wallpaper && <button onClick={() => setIsWallpaperDeleteConfirmOpen(true)} className="p-2 text-rose-500 rounded-full active:scale-90 transition-all"><Trash2 className="w-4 h-4" strokeWidth={1.5} /></button>}<button onClick={() => { if (!state.isPro) setIsPaywallOpen(true); else wallpaperInputRef.current?.click(); }} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-md">{state.user.wallpaper ? (state.language === 'es' ? 'CAMBIAR' : 'CHANGE') : (state.language === 'es' ? 'SUBIR FOTO' : 'UPLOAD')}</button><input type="file" ref={wallpaperInputRef} onChange={handleWallpaperUpload} accept="image/*" className="hidden" /></div></div>{state.user.wallpaper && (<div className="space-y-2 animate-in slide-in-from-top duration-300"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{state.language === 'es' ? 'OPACIDAD DEL FONDO' : 'WALLPAPER OPACITY'}</label><input type="range" min="0" max="1" step="0.01" value={state.user.wallpaperOpacity} onChange={(e) => { if (!state.isPro) setIsPaywallOpen(true); else setState(p => ({...p, user: {...p.user, wallpaperOpacity: parseFloat(e.target.value)}})); }} className="w-full h-1.5 bg-indigo-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" /></div>)}</div>
+               }}><div className="flex items-center gap-3"><Clock className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{t.generalNotifTime}</span></div><span className="text-[11px] font-black text-indigo-600 dark:text-white uppercase">{formatTimeTo12h(state.globalSettings.defaultNotificationTime)}</span></div><div className="flex items-center justify-between cursor-pointer" onClick={() => setIsInfoModalOpen(true)}><div className="flex items-center gap-3"><Info className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{t.info}</span></div><ChevronRight className="w-4 h-4 text-slate-300" strokeWidth={1.5} /></div></div>
+                 
+                 {/* Panel de Notificaciones Push para App Store */}
+                 <div className={`rounded-[2.5rem] p-6 border ${state.theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100 shadow-sm'} space-y-4 shadow-sm`}>
+                    <div className="flex items-center gap-3">
+                      <Bell className="text-indigo-600 w-5 h-5" strokeWidth={1.5} />
+                      <span className="text-[11px] font-black uppercase">{state.language === 'es' ? 'NOTIFICACIONES PUSH' : 'PUSH NOTIFICATIONS'}</span>
+                    </div>
+                    <button 
+                      onClick={requestNotificationPermission}
+                      className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
+                    >
+                      <Zap className="w-4 h-4 fill-white" /> {t.activateNotifications}
+                    </button>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase text-center">{t.notifStatus}</p>
+                 </div>
 
-                 {/* New Title Customization Section */}
+                 <div className={`rounded-[2.5rem] p-6 border ${state.theme === 'dark' ? (state.user.wallpaper ? 'bg-slate-800/70 backdrop-blur-md border-slate-700' : 'bg-slate-800 border-slate-700') : (state.user.wallpaper ? 'bg-white/70 border-slate-100 backdrop-blur-md' : 'bg-white border-slate-100 shadow-sm')} space-y-6 shadow-sm`}><div className="flex items-center justify-between"><div className="flex items-center gap-3"><ImageIcon className="text-indigo-600 w-5 h-5" strokeWidth={1.5} /><span className="text-[11px] font-black uppercase leading-tight">{state.language === 'es' ? 'FONDO DE PANTALLA' : 'WALLPAPER'}</span>{!state.isPro && <Crown className="w-3.5 h-3.5 text-amber-500" strokeWidth={1.5} />}</div><div className="flex items-center gap-2">{state.user.wallpaper && <button onClick={() => setIsWallpaperDeleteConfirmOpen(true)} className="p-2 text-rose-500 rounded-full active:scale-90 transition-all"><Trash2 className="w-4 h-4" strokeWidth={1.5} /></button>}<button onClick={() => { if (!state.isPro) setIsPaywallOpen(true); else wallpaperInputRef.current?.click(); }} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-md">{state.user.wallpaper ? (state.language === 'es' ? 'CAMBIAR' : 'CHANGE') : (state.language === 'es' ? 'SUBIR FOTO' : 'UPLOAD')}</button><input type="file" ref={wallpaperInputRef} onChange={handleWallpaperUpload} accept="image/*" className="hidden" /></div></div>{state.user.wallpaper && (<div className="space-y-2 animate-in slide-in-from-top duration-300"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{state.language === 'es' ? 'OPACIDAD DEL FONDO' : 'WALLPAPER OPACITY'}</label><input type="range" min="0" max="1" step="0.01" value={state.user.wallpaperOpacity} onChange={(e) => { if (!state.isPro) setIsPaywallOpen(true); else setState(p => ({...p, user: {...p.user, wallpaperOpacity: parseFloat(e.target.value)}})); }} className="w-full h-1.5 bg-indigo-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" /></div>)}</div>
+
                  <div className={`rounded-[2.5rem] p-6 border ${state.theme === 'dark' ? (state.user.wallpaper ? 'bg-slate-800/70 backdrop-blur-md border-slate-700' : 'bg-slate-800 border-slate-700') : (state.user.wallpaper ? 'bg-white/70 border-slate-100 backdrop-blur-md' : 'bg-white border-slate-100 shadow-sm')} space-y-6 shadow-sm`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -1050,11 +1085,23 @@ const App: React.FC = () => {
       {/* MODALS SECTION */}
       {isDayModalOpen && selectedCalendarDay && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[150] flex items-end justify-center">
-          <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[80vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}><div className="flex justify-between items-center mb-8"><div><h2 className="text-xl font-black uppercase tracking-widest">{t.eventsForDay}</h2><p className="text-[22.68px] font-bold text-slate-600 mt-1 uppercase tracking-widest leading-tight">{selectedCalendarDay.toLocaleDateString(state.language, { day: 'numeric', month: 'long', year: 'numeric' })}</p></div><button onClick={() => setIsDayModalOpen(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full shadow-sm active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button></div><div className="space-y-2 mb-8">{getDayEvents(selectedCalendarDay).length > 0 ? getDayEvents(selectedCalendarDay).map(item => <DateCard key={item.id} item={item} language={state.language} theme={state.theme} wallpaper={state.user.wallpaper} onCardClick={openEventDetails} onDeleteClick={(id) => setIsDeleteConfirmOpen(id)} />) : <div className="py-10 text-center opacity-30"><CalendarIcon className="mx-auto mb-2 w-8 h-8" strokeWidth={1.5} /><p className="text-[10px] font-black uppercase tracking-widest">{t.noEventsToday}</p></div>}</div><button onClick={() => { if(!state.isPro) setIsPaywallOpen(true); else { setIsDayModalOpen(false); setIsDirectOnce(true); setCurrentView('categories'); } }} className="w-full bg-indigo-600 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-0 active:scale-95 transition-all relative">
-            {!state.isPro && <Crown className="w-4 h-4 text-amber-500 absolute top-1 right-2" strokeWidth={1.5} />}
-            <Plus className="w-9 h-9" strokeWidth={2.5} /> 
-            <span className="text-[13px]">{`${t.addDate} ${state.language === 'es' ? 'O NOTA' : 'OR NOTE'}`}</span>
-          </button></div>
+          <div style={modalBgStyle} className={`w-full max-w-xl rounded-t-[3.5rem] p-9 animate-in slide-in-from-bottom max-h-[80vh] overflow-y-auto ${state.theme === 'dark' ? 'text-white' : 'text-slate-700 shadow-2xl'}`}>
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-xl font-black uppercase tracking-widest">{t.eventsForDay}</h2>
+                <p className="text-[22.68px] font-bold text-slate-600 mt-1 uppercase tracking-widest leading-tight">{selectedCalendarDay.toLocaleDateString(state.language, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              </div>
+              <button onClick={() => setIsDayModalOpen(false)} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full shadow-sm active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900 dark:text-white"/></button>
+            </div>
+            <div className="space-y-2 mb-8">
+              {getDayEvents(selectedCalendarDay).length > 0 ? getDayEvents(selectedCalendarDay).map(item => <DateCard key={item.id} item={item} language={state.language} theme={state.theme} wallpaper={state.user.wallpaper} onCardClick={openEventDetails} onDeleteClick={(id) => setIsDeleteConfirmOpen(id)} />) : <div className="py-10 text-center opacity-30"><CalendarIcon className="mx-auto mb-2 w-8 h-8" strokeWidth={1.5} /><p className="text-[10px] font-black uppercase tracking-widest">{t.noEventsToday}</p></div>}
+            </div>
+            <button onClick={() => { if(!state.isPro) setIsPaywallOpen(true); else { setIsDayModalOpen(false); setIsDirectOnce(true); setCurrentView('categories'); } }} className="w-full bg-indigo-600 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-0 active:scale-95 transition-all relative">
+              {!state.isPro && <Crown className="w-4 h-4 text-amber-500 absolute top-1 right-2" strokeWidth={1.5} />}
+              <Plus className="w-9 h-9" strokeWidth={2.5} /> 
+              <span className="text-[13px]">{`${t.addDate} ${state.language === 'es' ? 'O NOTA' : 'OR NOTE'}`}</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -1068,11 +1115,23 @@ const App: React.FC = () => {
                   <h2 className={`${createModalStyles.text} text-[26.5px] font-black uppercase leading-tight`}>{t.addNote}</h2>
                 </div>
               ) : (
-                <div className="flex flex-col w-full"><p className="text-[20.1px] font-black uppercase text-slate-400 leading-tight text-left mb-2">{t.addDate}</p><div className="flex items-center gap-4"><div className={activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-600' : createModalStyles.text}>{activeSubCategory ? React.cloneElement(SUB_CATEGORY_DETAILS[activeSubCategory].icon as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 }) : React.cloneElement(CATEGORY_DETAILS[(activeCategory as any) || CategoryType.BIRTHDAYS].icon as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 })}</div><h2 className={`${activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-600' : createModalStyles.text} text-[26.5px] font-black uppercase leading-tight`}>{(activeCategory as any) === CategoryType.BIRTHDAYS ? t.birthdays : (activeSubCategory ? (t as any)[SUB_CATEGORY_DETAILS[activeSubCategory].labelKey] : (t as any)[activeCategory!.toLowerCase()])}</h2></div></div>
+                <div className="flex flex-col w-full">
+                  <p className="text-[20.1px] font-black uppercase text-slate-400 leading-tight text-left mb-2">{t.addDate}</p>
+                  <div className="flex items-center gap-4">
+                    <div className={activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-600' : createModalStyles.text}>
+                      {activeSubCategory ? React.cloneElement(SUB_CATEGORY_DETAILS[activeSubCategory].icon as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 }) : React.cloneElement(CATEGORY_DETAILS[(activeCategory as any) || CategoryType.BIRTHDAYS].icon as React.ReactElement<any>, { className: "w-12 h-12", strokeWidth: 1.5 })}
+                    </div>
+                    <h2 className={`${activeCategory === CategoryType.BIRTHDAYS ? 'text-indigo-600' : createModalStyles.text} text-[26.5px] font-black uppercase leading-tight`}>
+                      {(activeCategory as any) === CategoryType.BIRTHDAYS ? t.birthdays : (activeSubCategory ? (t as any)[SUB_CATEGORY_DETAILS[activeSubCategory].labelKey] : (t as any)[activeCategory!.toLowerCase()])}
+                    </h2>
+                  </div>
+                </div>
               )}
               <button onClick={() => { setIsModalOpen(false); setIsRecording(false); setAudioBase64(null); setAttachedFileBase64(null); }} className="p-3 bg-slate-100 dark:bg-slate-200 rounded-full active:scale-75 transition-all"><X className="w-5 h-5 text-slate-900"/></button>
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); 
+            <form onSubmit={(e) => { 
+              e.preventDefault(); 
+              const fd = new FormData(e.currentTarget); 
               let finalDate = fd.get('date') as string;
               if (activeCategory === CategoryType.BIRTHDAYS) {
                 const year = repeatYearly ? 2000 : new Date().getFullYear();
